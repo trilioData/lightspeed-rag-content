@@ -1,0 +1,64 @@
+# Restore CRD
+
+## Overview
+
+The Restore CR triggers recovery of an application from a Backup or Snapshot. It supports restoring to the same or different namespace, selective resource restore, transformation of components, and post-restore hooks.
+
+## Key Fields
+
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| `spec.source.type` | string | Source type: `Backup` or `Snapshot` | Yes |
+| `spec.source.backup` | ObjectReference | Reference to the Backup CR to restore from | Conditional |
+| `spec.source.snapshot` | ObjectReference | Reference to the Snapshot CR | Conditional |
+| `spec.restoreFlags.skipIfAlreadyExists` | bool | Skip resources that already exist | No |
+| `spec.restoreFlags.patchIfAlreadyExists` | bool | Patch existing resources with backed-up spec | No |
+| `spec.restoreFlags.patchCRD` | bool | Patch existing CRDs during restore | No |
+| `spec.restoreFlags.UseOCPNamespaceUIDRange` | bool | Use OCP namespace UID range for data dirs | No |
+| `spec.actionFlags.protectRestoredApp` | bool | Re-apply TVK protection after restore | No |
+| `spec.actionFlags.cleanupOnFailure` | bool | Clean up restored resources if restore fails | No |
+| `spec.excludeResourceSelector` | ResourceSelector | Resources to exclude from restore | No |
+| `spec.resourceSelector` | ResourceSelector | Specific resources to restore | No |
+| `spec.hookConfig` | object | Post-restore hook configuration | No |
+| `spec.encryption` | object | Decryption key for encrypted backups | No |
+| `spec.resourcesReadyWaitSeconds` | uint16 | Wait time for pods to become ready (0-1200) | No |
+| `spec.cleanupConfig` | object | Cleanup and restore workflow config | No |
+
+## Status Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status.status` | string | `InProgress`, `Pending`, `Completed`, `Failed`, `Error` |
+| `status.phase` | string | Current restore phase |
+| `status.percentageCompletion` | int | Progress (0-100) |
+| `status.size` | Quantity | Total restored data size |
+| `status.duration` | Duration | Total restore duration |
+
+## Example
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: Restore
+metadata:
+  name: my-app-restore
+  namespace: my-app
+spec:
+  source:
+    type: Backup
+    backup:
+      name: my-app-backup
+      namespace: my-app
+  restoreFlags:
+    skipIfAlreadyExists: true
+    patchCRD: true
+  actionFlags:
+    protectRestoredApp: true
+    cleanupOnFailure: true
+```
+
+## Related Resources
+
+- [Backup CRD](backup-crd.md)
+- [Snapshot CRD](snapshot-crd.md)
+- [ClusterRestore CRD](clusterrestore-crd.md)
+- [Troubleshooting](../operators/triliovault-for-kubernetes/troubleshooting.md)
