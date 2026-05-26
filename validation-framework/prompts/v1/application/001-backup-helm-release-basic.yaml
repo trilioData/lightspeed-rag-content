@@ -1,0 +1,19 @@
+id: backup-helm-release-basic
+category: application
+validation_mode: yaml_baseline
+prompt: Create a BackupPlan to backup Helm release 'wordpress' in namespace 'prod' to Target 's3-target'
+expected_citations:
+- tvk-content/CRDs/backupplan-crd.md
+yaml_validation:
+- expected_kind: BackupPlan
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.namespace: prod
+    spec.backupConfig.target.name: s3-target
+    spec.backupPlanComponents.helmCharts: 
+    - 'wordpress'
+tags:
+- cr-creation
+- yaml-generation
+- helm
+- application-backup

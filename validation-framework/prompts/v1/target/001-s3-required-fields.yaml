@@ -1,0 +1,18 @@
+id: target-s3-required-fields
+category: target
+validation_mode: rubric
+prompt: What fields are required to configure an S3 Target?
+expected_facts:
+- spec.type must be ObjectStore
+- spec.vendor should be AWS for AWS S3
+- spec.objectStoreCredentials.region is required
+- spec.objectStoreCredentials.bucketName is required
+- spec.objectStoreCredentials.credentialSecret references a Secret containing accessKey and secretKey, with both name and namespace fields
+- spec.thresholdCapacity sets the maximum capacity Trilio will consume on the bucket (e.g. 5Gi)
+expected_citations:
+- tvk-content/CRDs/target-crd.md
+tags:
+- cr-api
+- required-fields
+- s3
+- objectstore

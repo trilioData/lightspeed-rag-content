@@ -1,0 +1,19 @@
+id: target-nfs-yaml
+category: target
+validation_mode: yaml_baseline
+prompt: Show me YAML for an NFS Target with server '10.0.0.100' and export path '/backups'.
+expected_citations:
+- tvk-content/CRDs/target-crd.md
+yaml_validation:
+- expected_kind: Target
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.type: NFS
+    spec.vendor: Other
+    spec.nfsCredentials.nfsExport: 10.0.0.100:/backups
+    spec.nfsCredentials.nfsOptions: '*'
+    spec.thresholdCapacity: '*'
+tags:
+- cr-creation
+- yaml-generation
+- nfs

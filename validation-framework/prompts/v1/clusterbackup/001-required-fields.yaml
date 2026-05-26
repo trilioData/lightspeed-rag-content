@@ -1,0 +1,16 @@
+id: clusterbackup-required-fields
+category: clusterbackup
+validation_mode: rubric
+prompt: What are the required fields to create a ClusterBackup?
+expected_facts:
+- apiVersion is triliovault.trilio.io/v1
+- kind is ClusterBackup
+- spec.clusterBackupPlan.name references an existing ClusterBackupPlan
+- spec.type is either Full or Incremental
+- The first ClusterBackup is always a Full backup even if type is set to Incremental
+- ClusterBackup is used together with a ClusterBackupPlan to back up multiple namespaces in the cluster
+expected_citations:
+- tvk-content/CRDs/clusterbackup-crd.md
+tags:
+- cr-api
+- required-fields

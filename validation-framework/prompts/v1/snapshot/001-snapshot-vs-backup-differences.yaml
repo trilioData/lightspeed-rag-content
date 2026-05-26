@@ -1,0 +1,19 @@
+id: snapshot-vs-backup-differences
+category: snapshot
+validation_mode: rubric
+prompt: What are the similarities and key differences between Snapshot and Backup in tvk?
+expected_facts:
+- Both Snapshot and Backup CRs reference a BackupPlan via spec.backupPlan (name + namespace) and use the same hooks/components defined there
+- Both rely on CSI snapshot functionality to capture point-in-time copies of persistent volume data
+- Snapshot only creates a CSI snapshot on the cluster and uploads metadata to the target; it does NOT upload data components (QCOW2 images) to the target
+- Backup uploads both metadata and data components (image containers) to the configured backup Target
+- Snapshots are always Full; there is no Incremental snapshot type (incrementals apply only to Backup)
+- Snapshots are cluster-local — they live on the storage backend and cannot be used for cross-cluster DR on their own
+- 'Both can be used as restore sources: spec.source.type: Backup or spec.source.type: Snapshot'
+expected_citations:
+- tvk-content/CRDs/snapshot-crd.md
+tags:
+- snapshot
+- backup
+- comparison
+- overview

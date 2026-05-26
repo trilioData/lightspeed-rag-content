@@ -1,0 +1,16 @@
+id: backupplan-required-fields
+category: backupplan
+validation_mode: rubric
+prompt: What fields are required to create a BackupPlan for a specific namespace?
+expected_facts:
+- spec.backupConfig.target is required and references a Target CR by name (and optionally namespace)
+- spec.backupConfig.target.name must point to an existing Target CR
+- spec.backupPlanComponents is optional for namespace-level backup; if omitted, the entire namespace is backed up
+- spec.backupPlanComponents may contain custom (label selectors), helmReleases, and/or operators to scope what is backed up
+- spec.backupConfig.retentionPolicy and spec.backupConfig.schedulePolicy are optional references to Policy CRs
+expected_citations:
+- tvk-content/CRDs/backupplan-crd.md
+tags:
+- cr-api
+- required-fields
+- basic

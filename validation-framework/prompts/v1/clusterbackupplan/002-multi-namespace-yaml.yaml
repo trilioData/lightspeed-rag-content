@@ -1,0 +1,21 @@
+id: clusterbackupplan-multi-namespace-yaml
+category: clusterbackupplan
+validation_mode: yaml_baseline
+prompt: Generate a YAML for a ClusterBackupPlan named 'multi-ns-backupplan' that backs up namespaces 'frontend', 'backend', and 'database' to a target named 's3-target' in namespace 'trilio-system'.
+expected_citations:
+- tvk-content/CRDs/clusterbackupplan-crd.md
+yaml_validation:
+- expected_kind: ClusterBackupPlan
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.name: multi-ns-backupplan
+    spec.backupConfig.target.name: s3-target
+    spec.backupConfig.target.namespace: trilio-system
+    spec.backupComponents.0.namespace: frontend
+    spec.backupComponents.1.namespace: backend
+    spec.backupComponents.2.namespace: database
+tags:
+- cr-creation
+- clusterbackupplan
+- yaml
+- multi-namespace

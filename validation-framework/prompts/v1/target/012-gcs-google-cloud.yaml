@@ -1,0 +1,26 @@
+id: target-gcs-google-cloud
+category: target
+validation_mode: yaml_baseline
+prompt: Create a Google Cloud Storage (GCS) Target with bucket 'k8s-backups-prod' in region 'us-central1'
+expected_citations:
+- tvk-content/CRDs/target-crd.md
+yaml_validation:
+- expected_kind: Target
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.type: ObjectStore
+    spec.vendor: Other
+    spec.objectStoreCredentials.bucketName: k8s-backups-prod
+    spec.objectStoreCredentials.region: us-central1
+    spec.objectStoreCredentials.url: '*'
+    spec.objectStoreCredentials.credentialSecret.name: '*'
+- expected_kind: Secret
+  expected_api_version: v1
+  expected_parameters:
+    type: Opaque
+tags:
+- cr-creation
+- yaml-generation
+- gcp
+- gcs
+- cloud-storage

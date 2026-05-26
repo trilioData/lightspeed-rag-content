@@ -1,0 +1,30 @@
+id: composite-backup-restore-workflow
+category: composite
+validation_mode: yaml_baseline
+prompt: Walk me through the complete workflow to create a backup and then restore it. What CRs do I need to create and in what order?
+expected_citations:
+- tvk-content/CRDs/target-crd.md
+- tvk-content/CRDs/backupplan-crd.md
+- tvk-content/CRDs/backup-crd.md
+- tvk-content/CRDs/restore-crd.md
+- tvk-content/CRDs/policy-crd.md
+yaml_validation:
+- expected_kind: Backup
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.type: '*'
+    spec.backupPlan.name: '*'
+    spec.backupPlan.namespace: '*'
+- expected_kind: Restore
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.source.type: Backup
+    spec.source.backup.name: '*'
+    spec.source.backup.namespace: '*'
+tags:
+- cr-creation
+- workflow
+- backup
+- restore
+- end-to-end
+- step-by-step

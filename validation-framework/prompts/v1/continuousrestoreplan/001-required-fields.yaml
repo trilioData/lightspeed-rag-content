@@ -1,0 +1,17 @@
+id: continuousrestoreplan-required-fields
+category: continuousrestoreplan
+validation_mode: rubric
+prompt: What are the required fields for a ContinuousRestorePlan?
+expected_facts:
+- apiVersion is triliovault.trilio.io/v1 and kind is ContinuousRestorePlan
+- spec.continuousRestorePolicy is required and is an ObjectReference to a Policy CR of spec.type ContinuousRestore
+- spec.target is required and is an ObjectReference to the Target CR that is watched for backups
+- Both spec.continuousRestorePolicy and spec.target use the ObjectReference structure (name and namespace)
+- spec.transformComponents is an optional field for PVC transformation configuration in custom resources and helm charts
+- The referenced ContinuousRestore Policy uses spec.continuousRestoreConfig.consistentSets to set the number of consistent restore sets to maintain
+expected_citations:
+- tvk-content/CRDs/continuousrestoreplan-crd.md
+tags:
+- cr-api
+- continuousrestoreplan
+- required-fields

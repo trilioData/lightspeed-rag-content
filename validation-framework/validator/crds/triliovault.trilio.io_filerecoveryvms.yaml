@@ -1,0 +1,450 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: filerecoveryvms.triliovault.trilio.io
+spec:
+  group: triliovault.trilio.io
+  names:
+    kind: FileRecoveryVM
+    listKind: FileRecoveryVMList
+    plural: filerecoveryvms
+    singular: filerecoveryvm
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.vmName
+      name: VM Name
+      type: string
+    - jsonPath: .spec.target.name
+      name: Target Name
+      type: string
+    - jsonPath: .status.status
+      name: Status
+      type: string
+    - jsonPath: .status.startTimestamp
+      name: Start Time
+      type: string
+    - jsonPath: .status.completionTimestamp
+      name: End Time
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: FileRecoveryVM is the Schema for the hooks API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: FileRecoveryVMSpec defines the specification of a FileRecoveryVM.
+            properties:
+              dataVolume:
+                description: DataVolume is an optional reference to the DataVolume
+                  object.
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  fieldPath:
+                    description: |-
+                      If referring to a piece of an object instead of an entire object, this string
+                      should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                      For example, if the object reference is to a container within a pod, this would take on a value like:
+                      "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                      the event) or if no container name is specified "spec.containers[2]" (container with
+                      index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                      referencing a part of an object.
+                    type: string
+                  kind:
+                    description: |-
+                      Kind of the referent.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                    type: string
+                  name:
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                  namespace:
+                    description: |-
+                      Namespace of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                    type: string
+                  resourceVersion:
+                    description: |-
+                      Specific resourceVersion to which this reference is made, if any.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                    type: string
+                  uid:
+                    description: |-
+                      UID of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              encryption:
+                description: |-
+                  Encryption specify an encryption key to decrypt the encrypted VM backup.
+                  The encryption key must be the same as the one used during the backup.
+                properties:
+                  encryptionSecret:
+                    description: EncryptionSecret is object ref of a secret which
+                      contains encryption key for backup encryption
+                    properties:
+                      apiVersion:
+                        description: API version of the referent.
+                        type: string
+                      fieldPath:
+                        description: |-
+                          If referring to a piece of an object instead of an entire object, this string
+                          should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                          For example, if the object reference is to a container within a pod, this would take on a value like:
+                          "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                          the event) or if no container name is specified "spec.containers[2]" (container with
+                          index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                          referencing a part of an object.
+                        type: string
+                      kind:
+                        description: |-
+                          Kind of the referent.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                        type: string
+                      name:
+                        description: |-
+                          Name of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        type: string
+                      namespace:
+                        description: |-
+                          Namespace of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                        type: string
+                      resourceVersion:
+                        description: |-
+                          Specific resourceVersion to which this reference is made, if any.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                        type: string
+                      uid:
+                        description: |-
+                          UID of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                        type: string
+                    type: object
+                    x-kubernetes-map-type: atomic
+                required:
+                - encryptionSecret
+                type: object
+              externalServiceType:
+                description: |-
+                  ExternalServiceType specifies the type of service created by the FileRecoveryVM
+                  to expose the mounted VM backup for external access.
+                  Defaults to ClusterIP.
+                type: string
+              instancetype:
+                description: |-
+                  Instancetype references a InstancetypeMatcher, which is used
+                  to populate fields in the RecoveryVM Template.
+                  Supported types are "VirtualMachineInstancetype" and "VirtualMachineClusterInstancetype".
+                properties:
+                  inferFromVolume:
+                    description: |-
+                      InferFromVolume lists the name of a volume that should be used to infer or discover the instancetype
+                      to be used through known annotations on the underlying resource. Once applied to the InstancetypeMatcher
+                      this field is removed.
+                    type: string
+                  kind:
+                    description: |-
+                      Kind specifies which instancetype resource is referenced.
+                      Allowed values are: "VirtualMachineInstancetype" and "VirtualMachineClusterInstancetype".
+                      If not specified, "VirtualMachineClusterInstancetype" is used by default.
+                    type: string
+                  name:
+                    description: Name is the name of the VirtualMachineInstancetype
+                      or VirtualMachineClusterInstancetype
+                    type: string
+                  revisionName:
+                    description: |-
+                      RevisionName specifies a ControllerRevision containing a specific copy of the
+                      VirtualMachineInstancetype or VirtualMachineClusterInstancetype to be used. This is initially
+                      captured the first time the instancetype is applied to the VirtualMachineInstance.
+                    type: string
+                type: object
+              location:
+                description: Location is the absolute path of the target where VM
+                  backup resides.
+                type: string
+              persistentVolumeClaim:
+                description: PersistentVolumeClaim is an optional reference to the
+                  Persistent Volume Claim object.
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  fieldPath:
+                    description: |-
+                      If referring to a piece of an object instead of an entire object, this string
+                      should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                      For example, if the object reference is to a container within a pod, this would take on a value like:
+                      "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                      the event) or if no container name is specified "spec.containers[2]" (container with
+                      index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                      referencing a part of an object.
+                    type: string
+                  kind:
+                    description: |-
+                      Kind of the referent.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                    type: string
+                  name:
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                  namespace:
+                    description: |-
+                      Namespace of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                    type: string
+                  resourceVersion:
+                    description: |-
+                      Specific resourceVersion to which this reference is made, if any.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                    type: string
+                  uid:
+                    description: |-
+                      UID of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              preference:
+                description: |-
+                  Preference references a PreferenceMatcher, which is used to populate
+                  fields in the RecoveryVM Template.
+                  Supported types are "VirtualMachinePreference" and "VirtualMachineClusterPreference".
+                properties:
+                  inferFromVolume:
+                    description: |-
+                      InferFromVolume lists the name of a volume that should be used to infer or discover the preference
+                      to be used through known annotations on the underlying resource. Once applied to the PreferenceMatcher
+                      this field is removed.
+                    type: string
+                  kind:
+                    description: |-
+                      Kind specifies which preference resource is referenced.
+                      Allowed values are: "VirtualMachinePreference" and "VirtualMachineClusterPreference".
+                      If not specified, "VirtualMachineClusterPreference" is used by default.
+                    type: string
+                  name:
+                    description: Name is the name of the VirtualMachinePreference
+                      or VirtualMachineClusterPreference
+                    type: string
+                  revisionName:
+                    description: |-
+                      RevisionName specifies a ControllerRevision containing a specific copy of the
+                      VirtualMachinePreference or VirtualMachineClusterPreference to be used. This is
+                      initially captured the first time the instancetype is applied to the VirtualMachineInstance.
+                    type: string
+                type: object
+              publicKey:
+                description: PublicKey is the public SSH key used for accessing the
+                  FileRecovery VM.
+                type: string
+              storageClass:
+                description: |-
+                  StorageClass is an optional field used during the creation of the default DataVolume (DV)
+                  to import Trilio's FileRecoveryVM image.
+                type: string
+              target:
+                description: Target is a reference to the target object where the
+                  VM backup is stored.
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  fieldPath:
+                    description: |-
+                      If referring to a piece of an object instead of an entire object, this string
+                      should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                      For example, if the object reference is to a container within a pod, this would take on a value like:
+                      "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                      the event) or if no container name is specified "spec.containers[2]" (container with
+                      index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                      referencing a part of an object.
+                    type: string
+                  kind:
+                    description: |-
+                      Kind of the referent.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                    type: string
+                  name:
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                  namespace:
+                    description: |-
+                      Namespace of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                    type: string
+                  resourceVersion:
+                    description: |-
+                      Specific resourceVersion to which this reference is made, if any.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                    type: string
+                  uid:
+                    description: |-
+                      UID of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              vmName:
+                description: Name of the backed up virtual machine the user intends
+                  to recover data from.
+                type: string
+            required:
+            - location
+            - publicKey
+            - target
+            - vmName
+            type: object
+          status:
+            description: FileRecoveryVMStatus defines the observed state of FileRecoveryVM.
+            properties:
+              backupMountLocation:
+                description: BackupMountLocation is the location where the VM backup
+                  is mounted.
+                items:
+                  description: MountLocation defines the location where the VM backup
+                    is mounted.
+                  properties:
+                    mountPath:
+                      description: |-
+                        Deprecated: MountPath is kept for backward compatibility with existing CRs.
+                        New code should use MountPathDetails instead.
+                      items:
+                        type: string
+                      type: array
+                    mountPathDetails:
+                      description: MountPathDetails contains mount paths with filesystem
+                        type and partition role.
+                      items:
+                        description: MountPathInfo defines a mount path and its filesystem
+                          type.
+                        properties:
+                          fsType:
+                            description: FsType is the filesystem type of the mounted
+                              partition (e.g., ext4, xfs, ntfs, vfat).
+                            type: string
+                          partType:
+                            description: PartType is the partition role (e.g., data,
+                              boot, swap, bios-boot).
+                            type: string
+                          path:
+                            description: Path is the mount path location.
+                            type: string
+                        type: object
+                      type: array
+                    pvcName:
+                      type: string
+                  type: object
+                type: array
+              completionTimestamp:
+                description: CompletionTimestamp is the time a filerecovery was finished.
+                format: date-time
+                type: string
+              condition:
+                description: Condition is the current condition of a FileRecoveryVM.
+                items:
+                  description: FileRecoveryVMCondition specifies the current condition
+                    of a FileRecoveryVM resource.
+                  properties:
+                    phase:
+                      description: Phase defines the current phase of the controller.
+                      enum:
+                      - Validation
+                      - MountingVMBackup
+                      - Update
+                      - RecoveryDiskProvisioning
+                      type: string
+                    reason:
+                      description: A brief message indicating details about why the
+                        component is in this condition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition.
+                      enum:
+                      - InProgress
+                      - Error
+                      - Completed
+                      - Ready
+                      - Failed
+                      type: string
+                    timestamp:
+                      description: Timestamp is the time a condition occurred.
+                      format: date-time
+                      type: string
+                  type: object
+                type: array
+              duration:
+                description: Duration is the amount of time the file recovery vm process
+                  took to finish.
+                type: string
+              failureReason:
+                description: |-
+                  FailureReason provides the reason for failure if the ChildJobs such as
+                  Validation, Recovery or Update fail.
+                type: string
+              phase:
+                description: Phase indicates the current phase of the FileRecoveryVM
+                  operation.
+                enum:
+                - Validation
+                - MountingVMBackup
+                - Update
+                - RecoveryDiskProvisioning
+                type: string
+              phaseStatus:
+                description: PhaseStatus provides the status of the current phase.
+                enum:
+                - InProgress
+                - Error
+                - Completed
+                - Failed
+                type: string
+              startTimestamp:
+                description: StartTimestamp is the time a filerecovery was started.
+                format: date-time
+                type: string
+              status:
+                description: Status indicates the overall status of the FileRecoveryVM.
+                enum:
+                - InProgress
+                - Error
+                - Completed
+                - Failed
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
