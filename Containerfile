@@ -23,8 +23,9 @@ WORKDIR /workdir
 COPY requirements.gpu.txt .
 RUN pip3.12 install --no-cache-dir -r requirements.gpu.txt && ln -s /usr/local/lib/python3.12/site-packages/llama_index/core/_static/nltk_cache /root/nltk_data
 
-COPY ocp-product-docs-plaintext ./ocp-product-docs-plaintext
-COPY runbooks ./runbooks
+COPY tvk-content ./tvk-content
+# TODO: Add runbooks for MVP2
+# COPY runbooks ./runbooks
 
 COPY embeddings_model ./embeddings_model
 RUN cd embeddings_model; if [ "$HERMETIC" == "true" ]; then \
@@ -38,16 +39,16 @@ RUN if [ "$FLAVOR" == "gpu" ]; then \
     fi
 
 COPY scripts/generate_embeddings.py .
-RUN set -e && for OCP_VERSION in $(ls -1 ocp-product-docs-plaintext); do \
-        python3.12 generate_embeddings.py -f ocp-product-docs-plaintext/${OCP_VERSION} -r runbooks/alerts -md embeddings_model \
-            -mn ${EMBEDDING_MODEL} -o vector_db/ocp_product_docs/${OCP_VERSION} \
-            -i ocp-product-docs-$(echo $OCP_VERSION | sed 's/\./_/g') -v ${OCP_VERSION} -hb $HERMETIC; \
-    done
-RUN LATEST_VERSION=$(ls -1 vector_db/ocp_product_docs/ | sort -V | tail -n 1) && \
-    cd vector_db/ocp_product_docs && ln -s ${LATEST_VERSION} latest
+RUN set -e && python3.12 generate_embeddings.py -f tvk-content -md embeddings_model \
+            -mn ${EMBEDDING_MODEL} -o vector_db/tvk-content \
+            -i tvk-content -hb $HERMETIC
+# TODO: Add runbooks for MVP2
+# RUN set -e && python3.12 generate_embeddings.py -f tvk-content -r runbooks/alerts -md embeddings_model \
+#             -mn ${EMBEDDING_MODEL} -o vector_db/tvk-content \
+#             -i tvk-content -hb $HERMETIC
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:12db9874bd753eb98b1ab3d840e75de5d6842ac0604fbd68c012adefe97140be
-COPY --from=lightspeed-rag-builder /workdir/vector_db/ocp_product_docs /rag/vector_db/ocp_product_docs
+COPY --from=lightspeed-rag-builder /workdir/vector_db/tvk-content /rag/vector_db/tvk-content
 COPY --from=lightspeed-rag-builder /workdir/embeddings_model /rag/embeddings_model
 
 # this directory is checked by ecosystem-cert-preflight-checks task in Konflux

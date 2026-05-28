@@ -49,8 +49,13 @@ update-model: ## Update the local copy of the embedding model
 	@rm -rf ./embeddings_model
 	@python scripts/download_embeddings_model.py -l ./embeddings_model -r sentence-transformers/all-mpnet-base-v2
 
-build-image: ## Build a rag-content container image.
-	podman build -t rag-content .
+REGISTRY ?= eu.gcr.io/amazing-chalice-243510
+IMAGE_NAME ?= tvk-lightspeed-rag-content
+IMAGE_TAG ?= v$(shell date +%Y%m%d)-$(shell git rev-parse --short HEAD)
+IMAGE := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+
+build-image: ## Build a linux/amd64 rag-content image tagged $(IMAGE).
+	podman build --platform=linux/amd64 -t $(IMAGE) .
 
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'

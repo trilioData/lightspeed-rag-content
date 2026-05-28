@@ -18,8 +18,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.readers.file.flat.base import FlatReader
 from llama_index.vector_stores.faiss import FaissVectorStore
 
-OCP_DOCS_ROOT_URL = "https://docs.openshift.com/container-platform/"
-OCP_DOCS_VERSION = "4.16"
+TVK_DOCS_URL = "https://docs.trilio.io/kubernetes"
 UNREACHABLE_DOCS: int = 0
 RUNBOOKS_ROOT_URL = "https://github.com/openshift/runbooks/blob/master/alerts"
 HERMETIC_BUILD = False
@@ -64,19 +63,14 @@ def file_metadata_func(file_path: str, docs_url_func: Callable[[str], str]) -> D
     return {"docs_url": docs_url, "title": title}
 
 
-def ocp_file_metadata_func(file_path: str) -> Dict:
-    """Populate metadata for an OCP docs page.
+def tvk_file_metadata_func(file_path: str) -> Dict:
+    """Populate metadata for a TVK docs page.
 
-    Args:
-        file_path: str: file path in str
+    All chunks point at the Trilio Kubernetes docs landing page; the local
+    TVK content has no 1:1 mapping to docs.trilio.io paths, so no per-file
+    URL is constructed.
     """
-    docs_url = lambda file_path: (  # noqa: E731
-        OCP_DOCS_ROOT_URL
-        + OCP_DOCS_VERSION
-        + file_path.removeprefix(EMBEDDINGS_ROOT_DIR).removesuffix("txt")
-        + "html"
-    )
-    return file_metadata_func(file_path, docs_url)
+    return file_metadata_func(file_path, lambda _file_path: TVK_DOCS_URL)
 
 
 def runbook_file_metadata_func(file_path: str) -> Dict:
@@ -144,7 +138,6 @@ if __name__ == "__main__":
     )
     parser.add_argument("-o", "--output", help="Vector DB output folder")
     parser.add_argument("-i", "--index", help="Product index")
-    parser.add_argument("-v", "--ocp-version", help="OCP version")
     parser.add_argument(
         "-hb",
         "--hermetic-build",
@@ -160,14 +153,12 @@ if __name__ == "__main__":
     if PERSIST_FOLDER == "":
         PERSIST_FOLDER = "."
 
-    EMBEDDINGS_ROOT_DIR = os.path.abspath(args.folder)
-    if EMBEDDINGS_ROOT_DIR.endswith("/"):
-        EMBEDDINGS_ROOT_DIR = EMBEDDINGS_ROOT_DIR[:-1]
-    RUNBOOKS_ROOT_DIR = os.path.abspath(args.runbooks)
-    if RUNBOOKS_ROOT_DIR.endswith("/"):
-        RUNBOOKS_ROOT_DIR = RUNBOOKS_ROOT_DIR[:-1]
+    RUNBOOKS_ROOT_DIR = ""
+    if args.runbooks:
+        RUNBOOKS_ROOT_DIR = os.path.abspath(args.runbooks)
+        if RUNBOOKS_ROOT_DIR.endswith("/"):
+            RUNBOOKS_ROOT_DIR = RUNBOOKS_ROOT_DIR[:-1]
 
-    OCP_DOCS_VERSION = args.ocp_version
     HERMETIC_BUILD = args.hermetic_build
 
     os.environ["HF_HOME"] = args.model_dir
@@ -184,7 +175,7 @@ if __name__ == "__main__":
 
     # Load documents
     documents = SimpleDirectoryReader(
-        args.folder, recursive=True, file_metadata=ocp_file_metadata_func
+        args.folder, recursive=True, file_metadata=tvk_file_metadata_func
     ).load_data()
 
     # Split based on header/section
@@ -205,16 +196,19 @@ if __name__ == "__main__":
         else:
             print("skipping node without whitespace: " + node.__repr__())
 
-    runbook_documents = SimpleDirectoryReader(
-        args.runbooks,
-        recursive=True,
-        required_exts=[".md"],
-        file_extractor={".md": FlatReader()},
-        file_metadata=runbook_file_metadata_func,
-    ).load_data()
-    runbook_nodes = Settings.text_splitter.get_nodes_from_documents(runbook_documents)
+    if args.runbooks:
+        runbook_documents = SimpleDirectoryReader(
+            args.runbooks,
+            recursive=True,
+            required_exts=[".md"],
+            file_extractor={".md": FlatReader()},
+            file_metadata=runbook_file_metadata_func,
+        ).load_data()
+        runbook_nodes = Settings.text_splitter.get_nodes_from_documents(
+            runbook_documents
+        )
 
-    good_nodes.extend(runbook_nodes)
+        good_nodes.extend(runbook_nodes)
 
     # Create & save Index
     index = VectorStoreIndex(
