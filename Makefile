@@ -57,6 +57,9 @@ IMAGE := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 build-image: ## Build a linux/amd64 rag-content image tagged $(IMAGE).
 	podman build --platform=linux/amd64 -t $(IMAGE) .
 
+build-docker-image:
+	docker buildx build --push --platform=linux/amd64 -t $(IMAGE) -f Containerfile .
+
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'
 	@echo ''
