@@ -1,0 +1,18 @@
+id: backup-with-encryption-enabled
+category: advanced
+validation_mode: yaml_baseline
+prompt: Create a BackupPlan with encryption enabled using encryption secret 'backup-encryption-key'
+expected_citations:
+- tvk-content/CRDs/backupplan-crd.md
+yaml_validation:
+- expected_kind: BackupPlan
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.encryption.encryptionSecret.name: backup-encryption-key
+    spec.encryption.encryptionSecret.namespace: '*'
+    spec.backupConfig.target.name: '*'
+tags:
+- cr-creation
+- yaml-generation
+- encryption
+- security

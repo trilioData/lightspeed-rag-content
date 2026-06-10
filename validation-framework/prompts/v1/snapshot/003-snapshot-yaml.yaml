@@ -1,0 +1,18 @@
+id: snapshot-yaml
+category: snapshot
+validation_mode: yaml_baseline
+prompt: Generate a YAML for a Snapshot named 'app-snapshot' that references a BackupPlan named 'app-backupplan' in namespace 'production'.
+expected_citations:
+- tvk-content/CRDs/snapshot-crd.md
+yaml_validation:
+- expected_kind: Snapshot
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.name: app-snapshot
+    metadata.namespace: production
+    spec.backupPlan.name: app-backupplan
+    spec.backupPlan.namespace: production
+tags:
+- cr-creation
+- snapshot
+- yaml

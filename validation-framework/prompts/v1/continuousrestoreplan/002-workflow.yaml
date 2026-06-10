@@ -1,0 +1,17 @@
+id: continuousrestoreplan-workflow
+category: continuousrestoreplan
+validation_mode: rubric
+prompt: How does a ContinuousRestorePlan work?
+expected_facts:
+- A Policy CR with spec.type ContinuousRestore is created first; it defines spec.continuousRestoreConfig.consistentSets, the number of latest consistent restore sets to keep at the remote site
+- A Target CR is created on the restore cluster that points at the same backup storage location written to by the source cluster
+- A ContinuousRestorePlan CR is created referencing the ContinuousRestore Policy via spec.continuousRestorePolicy and the Target via spec.target
+- The ContinuousRestore Policy is referenced from a BackupPlan on the source cluster to enable continuous synchronization of its backups
+- T4K maintains the configured number of consistent restore sets at the remote site, providing continuous recoverability
+- Older consistent sets beyond spec.continuousRestoreConfig.consistentSets are pruned automatically
+expected_citations:
+- tvk-content/CRDs/continuousrestoreplan-crd.md
+tags:
+- continuousrestoreplan
+- workflow
+- overview

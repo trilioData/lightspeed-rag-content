@@ -1,0 +1,17 @@
+id: backupplan-basic-yaml
+category: backupplan
+validation_mode: yaml_baseline
+prompt: Show me YAML for a basic BackupPlan that references a Target named 's3-target' in namespace 'trilio-system'.
+expected_citations:
+- tvk-content/CRDs/backupplan-crd.md
+yaml_validation:
+- expected_kind: BackupPlan
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.name: '*'
+    spec.backupConfig.target.name: s3-target
+    spec.backupConfig.target.namespace: trilio-system
+tags:
+- cr-creation
+- yaml-generation
+- basic

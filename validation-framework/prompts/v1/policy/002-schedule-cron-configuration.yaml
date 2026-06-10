@@ -1,0 +1,18 @@
+id: policy-schedule-cron-configuration
+category: policy
+validation_mode: rubric
+prompt: How do I configure a Schedule policy with cron expressions in TVK?
+expected_facts:
+- The CRD kind is Policy with apiVersion triliovault.trilio.io/v1
+- spec.type must be set to Schedule
+- Cron expressions are defined under spec.scheduleConfig.schedule as a list of cron strings
+- A single Scheduling Policy may contain multiple cron strings (e.g. daily, hourly, weekly, monthly, yearly)
+- Each cron string in the policy creates an associated Kubernetes cron job
+- The Scheduling Policy is referenced from a BackupPlan via spec.backupConfig.schedulePolicy.fullBackupPolicy (name + namespace)
+expected_citations:
+- tvk-content/CRDs/policy-crd.md
+tags:
+- cr-api
+- schedule
+- cron
+- fields

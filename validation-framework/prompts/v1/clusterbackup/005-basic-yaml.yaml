@@ -1,0 +1,17 @@
+id: clusterbackup-basic-yaml
+category: clusterbackup
+validation_mode: yaml_baseline
+prompt: Show me YAML for a ClusterBackup named 'multi-ns-backup' that references ClusterBackupPlan 'multi-ns-plan' with type Full.
+expected_citations:
+- tvk-content/CRDs/clusterbackup-crd.md
+yaml_validation:
+- expected_kind: ClusterBackup
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.name: multi-ns-backup
+    spec.type: Full
+    spec.clusterBackupPlan.name: multi-ns-plan
+tags:
+- cr-creation
+- yaml-generation
+- basic

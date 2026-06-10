@@ -1,0 +1,24 @@
+id: target-azure-blob-storage
+category: target
+validation_mode: yaml_baseline
+prompt: Create an Azure Blob Storage Target with storage account 'triliobackups', container 'kubernetes-backups' in region 'eastus'
+expected_citations:
+- tvk-content/CRDs/target-crd.md
+yaml_validation:
+- expected_kind: Target
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.type: ObjectStore
+    spec.vendor: Azure
+    spec.objectStoreCredentials.bucketName: kubernetes-backups
+    spec.objectStoreCredentials.region: eastus
+    spec.objectStoreCredentials.credentialSecret.name: '*'
+- expected_kind: Secret
+  expected_api_version: v1
+  expected_parameters:
+    type: Opaque
+tags:
+- cr-creation
+- yaml-generation
+- azure
+- cloud-storage

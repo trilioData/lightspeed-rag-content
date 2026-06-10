@@ -1,0 +1,21 @@
+id: restore-different-namespace-dr
+category: restore-scenarios
+validation_mode: yaml_baseline
+prompt: Create a Restore that restores Backup 'app-backup' from namespace 'app' to a different namespace 'app-dr' for disaster recovery
+expected_citations:
+- tvk-content/CRDs/restore-crd.md
+yaml_validation:
+- expected_kind: Restore
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.name: '*'
+    metadata.namespace: app-dr
+    spec.source.type: Backup
+    spec.source.backup.name: app-backup
+    spec.source.backup.namespace: app
+tags:
+- cr-creation
+- yaml-generation
+- restore
+- disaster-recovery
+- cross-namespace

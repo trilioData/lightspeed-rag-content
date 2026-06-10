@@ -1,0 +1,21 @@
+id: backup-operator-managed-app
+category: application
+validation_mode: yaml_baseline
+prompt: Create a BackupPlan for MongoDB operator-managed database in 'database' namespace using operator backup with Target 'backup-target'
+expected_citations:
+- tvk-content/CRDs/backupplan-crd.md
+yaml_validation:
+- expected_kind: BackupPlan
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.namespace: database
+    spec.backupConfig.target.name: backup-target
+    spec.backupPlanComponents.operators: '*'
+    spec.backupPlanComponents.operators[0].operatorId: '*'
+    spec.backupPlanComponents.operators[0].applicationResourceSelector: '*'
+tags:
+- cr-creation
+- yaml-generation
+- operator
+- application-backup
+- database

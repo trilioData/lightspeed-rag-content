@@ -1,0 +1,19 @@
+id: restore-source-types
+category: restore
+validation_mode: rubric
+prompt: What source types can a Restore CR use?
+expected_facts:
+- spec.source.type is required and is an enum
+- 'Valid values include: Backup, Snapshot, Location, BackupPlan, ConsistentSet, and ContinuousRestorePlan'
+- For type Backup, set spec.source.backup with name and namespace of the Backup CR
+- For type Snapshot, the gitbook example also uses spec.source.backup (name+namespace of the Snapshot) rather than a separate snapshot field
+- For type BackupPlan, set spec.source.backupPlan; Trilio restores the latest successful backup or snapshot of that BackupPlan
+- For type Location, set spec.source.location (path string) and spec.source.target (name+namespace of the Target to read from)
+- For type ConsistentSet, set spec.source.consistentSet; for type ContinuousRestorePlan, set spec.source.continuousRestorePlan
+expected_citations:
+- tvk-content/CRDs/restore-crd.md
+tags:
+- cr-api
+- restore
+- source-types
+- fields

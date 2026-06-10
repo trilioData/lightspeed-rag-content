@@ -1,0 +1,19 @@
+id: restore-yaml-from-backup
+category: restore
+validation_mode: yaml_baseline
+prompt: Generate a YAML for a Restore named 'app-restore' that restores from a Backup named 'app-backup' in namespace 'production'.
+expected_citations:
+- tvk-content/CRDs/restore-crd.md
+yaml_validation:
+- expected_kind: Restore
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.name: app-restore
+    metadata.namespace: production
+    spec.source.type: Backup
+    spec.source.backup.name: app-backup
+    spec.source.backup.namespace: production
+tags:
+- cr-creation
+- restore
+- yaml
