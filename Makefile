@@ -49,13 +49,48 @@ update-model: ## Update the local copy of the embedding model
 	@rm -rf ./embeddings_model
 	@python scripts/download_embeddings_model.py -l ./embeddings_model -r sentence-transformers/all-mpnet-base-v2
 
-REGISTRY ?= eu.gcr.io/amazing-chalice-243510
+# Pick the registry from the branch (Prow sets PULL_BASE_REF); fall back to the
+# current git branch for local runs. release* -> quay.io/triliodata,
+# feature* -> quay.io/triliovault, everything else (master/main) -> eu.gcr.io.
+PULL_BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
+REGISTRY ?= $(shell case "$(PULL_BASE_REF)" in \
+	release*) echo "quay.io/triliodata" ;; \
+	feature*) echo "quay.io/triliovault" ;; \
+	*) echo "eu.gcr.io/amazing-chalice-243510" ;; \
+	esac)
 IMAGE_NAME ?= tvk-lightspeed-rag-content
-IMAGE_TAG ?= v$(shell date +%Y%m%d)-$(shell git rev-parse --short HEAD)
+# Tag by branch: main/master -> master, feature* -> branch name,
+# release* -> git tag, everything else (e.g. PR presubmits) -> PR head SHA.
+IMAGE_TAG ?= $(shell case "$(PULL_BASE_REF)" in \
+	main|master) echo "master" ;; \
+	feature*) echo "$(PULL_BASE_REF)" ;; \
+	release*) git describe --tags 2>/dev/null || git rev-parse --short HEAD ;; \
+	*) echo "$(PULL_PULL_SHA)" ;; \
+	esac)
 IMAGE := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 build-image: ## Build a linux/amd64 rag-content image tagged $(IMAGE).
 	podman build --platform=linux/amd64 -t $(IMAGE) .
+
+# Log in to the registry implied by $(REGISTRY). gcr.io uses the GCS service
+# account (GOOGLE_APPLICATION_CREDENTIALS); quay orgs use the robot creds
+# injected by the preset-quay-creds Prow preset.
+registry-login: ## Log in to the registry selected by $(REGISTRY).
+	@case "$(REGISTRY)" in \
+		*gcr.io*) \
+			echo "Logging in to gcr.io"; \
+			docker login -u _json_key --password-stdin https://eu.gcr.io < "$${GOOGLE_APPLICATION_CREDENTIALS}" ;; \
+		quay.io/triliovault) \
+			echo "Logging in to quay.io/triliovault"; \
+			echo "$${QUAY_STABLE_CI_PASSWORD}" | docker login -u "$${QUAY_STABLE_CI_USERNAME}" --password-stdin quay.io ;; \
+		quay.io/triliodata) \
+			echo "Logging in to quay.io/triliodata"; \
+			echo "$${QUAY_STABLE_RELEASE_PASSWORD}" | docker login -u "$${QUAY_STABLE_RELEASE_USERNAME}" --password-stdin quay.io ;; \
+		*) echo "No login configured for registry '$(REGISTRY)'" >&2; exit 1 ;; \
+	esac
+
+build-docker-image: registry-login
+	docker buildx build --push --platform=linux/amd64 -t $(IMAGE) -f Containerfile
 
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'
