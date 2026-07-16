@@ -59,14 +59,24 @@ REGISTRY ?= $(shell case "$(PULL_BASE_REF)" in \
 	(*) echo "eu.gcr.io/amazing-chalice-243510" ;; \
 	esac)
 IMAGE_NAME ?= tvk-lightspeed-rag-content
-# Tag by branch: main/master -> master, feature* -> branch name,
-# release* -> git tag, everything else (e.g. PR presubmits) -> PR head SHA.
-IMAGE_TAG ?= $(shell case "$(PULL_BASE_REF)" in \
-	(main|master) echo "master" ;; \
-	(feature*) echo "$(PULL_BASE_REF)" ;; \
-	(release*) git describe --tags 2>/dev/null || git rev-parse --short HEAD ;; \
-	(*) echo "$(PULL_PULL_SHA)" ;; \
-	esac)
+# Image tag applied to all built/pushed images, resolved automatically so Prow
+# jobs (and local builds) never need to pass it (k8s-triliovault-style):
+#   * an explicit IMAGE_TAG= / env value wins;
+#   * else a semantic git tag when the current branch points at one;
+#   * else the Prow job env — presubmit builds tag <PULL_PULL_SHA>, postsubmit
+#     builds tag <PULL_BASE_REF>-<short PULL_BASE_SHA>;
+#   * else the current branch name (local dev).
+IMAGE_TAG ?= $(shell git rev-parse --abbrev-ref HEAD | grep $(shell git describe --tags --always --abbrev=0) | cut -d '-' -f2,3)
+
+ifeq (,$(IMAGE_TAG))
+ifeq ($(JOB_TYPE),presubmit)
+IMAGE_TAG=$(PULL_PULL_SHA)
+else ifeq ($(JOB_TYPE),postsubmit)
+IMAGE_TAG=$(PULL_BASE_REF)
+else
+IMAGE_TAG=$(shell git rev-parse --abbrev-ref HEAD)
+endif
+endif
 IMAGE := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 build-image: ## Build a linux/amd64 rag-content image tagged $(IMAGE).
