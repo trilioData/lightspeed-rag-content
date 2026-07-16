@@ -90,7 +90,7 @@ registry-login: ## Log in to the registry selected by $(REGISTRY).
 	esac
 
 build-docker-image: registry-login
-	docker buildx build --push --platform=linux/amd64 -t $(IMAGE) -f Containerfile
+	docker buildx build --push --platform=linux/amd64 -t $(IMAGE) -f Containerfile .
 
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'
