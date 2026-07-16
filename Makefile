@@ -54,18 +54,18 @@ update-model: ## Update the local copy of the embedding model
 # feature* -> quay.io/triliovault, everything else (master/main) -> eu.gcr.io.
 PULL_BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
 REGISTRY ?= $(shell case "$(PULL_BASE_REF)" in \
-	release*) echo "quay.io/triliodata" ;; \
-	feature*) echo "quay.io/triliovault" ;; \
-	*) echo "eu.gcr.io/amazing-chalice-243510" ;; \
+	(release*) echo "quay.io/triliodata" ;; \
+	(feature*) echo "quay.io/triliovault" ;; \
+	(*) echo "eu.gcr.io/amazing-chalice-243510" ;; \
 	esac)
 IMAGE_NAME ?= tvk-lightspeed-rag-content
 # Tag by branch: main/master -> master, feature* -> branch name,
 # release* -> git tag, everything else (e.g. PR presubmits) -> PR head SHA.
 IMAGE_TAG ?= $(shell case "$(PULL_BASE_REF)" in \
-	main|master) echo "master" ;; \
-	feature*) echo "$(PULL_BASE_REF)" ;; \
-	release*) git describe --tags 2>/dev/null || git rev-parse --short HEAD ;; \
-	*) echo "$(PULL_PULL_SHA)" ;; \
+	(main|master) echo "master" ;; \
+	(feature*) echo "$(PULL_BASE_REF)" ;; \
+	(release*) git describe --tags 2>/dev/null || git rev-parse --short HEAD ;; \
+	(*) echo "$(PULL_PULL_SHA)" ;; \
 	esac)
 IMAGE := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
