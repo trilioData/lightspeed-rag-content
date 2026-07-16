@@ -1,0 +1,15 @@
+id: clusterrestore-required-fields
+category: clusterrestore
+validation_mode: rubric
+prompt: What are the required fields to create a ClusterRestore?
+expected_facts:
+- apiVersion is triliovault.trilio.io/v1 and kind is ClusterRestore
+- spec.source.type is required and must be either ClusterBackup or ClusterSnapshot
+- When spec.source.type is ClusterBackup, spec.source.clusterBackup.name must reference an existing ClusterBackup
+- When spec.source.type is ClusterSnapshot, spec.source.clusterSnapshot.name must reference an existing ClusterSnapshot
+- spec.components is a list of {backupNamespace, restoreNamespace} pairs used to map source namespaces to restore namespaces
+expected_citations:
+- tvk-content/CRDs/clusterrestore-crd.md
+tags:
+- cr-api
+- required-fields

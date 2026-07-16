@@ -1,0 +1,261 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: licenses.triliovault.trilio.io
+spec:
+  group: triliovault.trilio.io
+  names:
+    kind: License
+    listKind: LicenseList
+    plural: licenses
+    singular: license
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.status
+      name: Status
+      type: string
+    - jsonPath: .status.message
+      name: Message
+      type: string
+    - jsonPath: .status.properties.expirationTimestamp
+      name: Expiration Time
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: License is the Schema for the licenses API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: LicenseSpec defines the desired state of License
+            properties:
+              key:
+                description: |-
+                  Deprecated: Key is the product key to use triliovault application to perform backup/restore.
+                  This field is deprecated and will be removed in a future release. Use SecretRef instead.
+                type: string
+              secretRef:
+                description: |-
+                  SecretRef is a reference to the Kubernetes Secret containing the license key.
+                  The referenced secret must be in the same namespace as the License object (install namespace)
+                  and must contain a key named "trilioLicense" with the license key value.
+                  When specified, this takes precedence over the deprecated Key field.
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  fieldPath:
+                    description: |-
+                      If referring to a piece of an object instead of an entire object, this string
+                      should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                      For example, if the object reference is to a container within a pod, this would take on a value like:
+                      "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                      the event) or if no container name is specified "spec.containers[2]" (container with
+                      index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                      referencing a part of an object.
+                    type: string
+                  kind:
+                    description: |-
+                      Kind of the referent.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                    type: string
+                  name:
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                  namespace:
+                    description: |-
+                      Namespace of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                    type: string
+                  resourceVersion:
+                    description: |-
+                      Specific resourceVersion to which this reference is made, if any.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                    type: string
+                  uid:
+                    description: |-
+                      UID of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+            type: object
+          status:
+            description: LicenseStatus defines the observed state of License
+            properties:
+              condition:
+                description: Condition is the current condition of a license.
+                items:
+                  description: LicenseCondition specifies the current condition of
+                    a license.
+                  properties:
+                    message:
+                      description: A brief message indicating details about why the
+                        component is in this condition.
+                      type: string
+                    phase:
+                      description: Phase defines the current phase of the controller.
+                      enum:
+                      - Validation
+                      type: string
+                    status:
+                      description: Status is the status of the condition.
+                      enum:
+                      - Active
+                      - Expired
+                      - Invalid
+                      - Error
+                      - Warning
+                      type: string
+                    timestamp:
+                      description: Timestamp is the time a condition occurred.
+                      format: date-time
+                      type: string
+                  type: object
+                type: array
+              currentCPUCount:
+                description: 'Deprecated: CurrentCPUCount is the total number of CPUs
+                  currently available.'
+                format: int32
+                minimum: 0
+                type: integer
+              gracePeriodEndTimestamp:
+                description: 'Deprecated: GracePeriodEndTimestamp is the time grace
+                  period for using the triliovault application going to end.'
+                format: date-time
+                type: string
+              gracePeriodStartTimestamp:
+                description: 'Deprecated: GracePeriodStartTimestamp is the time grace
+                  period started to use triliovault application.'
+                format: date-time
+                type: string
+              maxCPUs:
+                description: 'Deprecated: MaxCPUs is the count of maximum number of
+                  CPUs available in cluster.'
+                format: int32
+                minimum: 0
+                type: integer
+              message:
+                description: A brief message indicating details about why the license
+                  in this state.
+                type: string
+              properties:
+                description: Properties is the details about the license based on
+                  provided license key.
+                properties:
+                  active:
+                    description: Active is the status of the license.
+                    type: boolean
+                  capacity:
+                    description: 'Deprecated: Capacity is the maximum capacity to
+                      use the license in number of CPUs.'
+                    format: int32
+                    type: integer
+                  company:
+                    description: Company is the name of a company purchased license
+                      for.
+                    type: string
+                  creationTimestamp:
+                    description: CreationTimestamp is the time license created to
+                      use triliovault application.
+                    format: date-time
+                    type: string
+                  edition:
+                    description: 'Deprecated: Edition is the type of license purchased
+                      to use triliovault application.'
+                    enum:
+                    - FreeTrial
+                    - Basic
+                    - STANDARD
+                    - PROFESSIONAL
+                    - ENTERPRISE
+                    type: string
+                  expirationTimestamp:
+                    description: ExpirationTimestamp is the time provided license
+                      going to expire and won't be able to perform backup/restore
+                      operation.
+                    format: date-time
+                    type: string
+                  kubeUID:
+                    description: 'Deprecated: KubeUID is the kubesystem or namespace
+                      uuid of the cluster the license purchased for.'
+                    type: string
+                  licenseID:
+                    description: LicenseID is the identifier for the license.
+                    type: string
+                  maintenanceExpiryTimestamp:
+                    description: MaintenanceExpiryTimestamp is the time maintenance
+                      support for the provided license going to expire.
+                    format: date-time
+                    type: string
+                  numberOfUsers:
+                    description: NumberOfUsers is the total number of users the license
+                      valid for.
+                    type: integer
+                  purchaseTimestamp:
+                    description: PurchaseTimestamp is the time user purchased the
+                      license to use triliovault application.
+                    format: date-time
+                    type: string
+                  scope:
+                    description: 'Deprecated: Scope is the scope of a KubeUID the
+                      license purchased for.'
+                    enum:
+                    - Cluster
+                    - Namespaced
+                    type: string
+                  sen:
+                    description: SEN is the unique serial of a license purchased.
+                    type: string
+                  serverID:
+                    description: ServerID is the unique serverID of license purchased.
+                    type: string
+                  version:
+                    description: Version is the version of a license.
+                    type: string
+                type: object
+              status:
+                description: Status is the overall status of the license based on
+                  provided key.
+                enum:
+                - Active
+                - Expired
+                - Invalid
+                - Error
+                - Warning
+                type: string
+              type:
+                description: LicenseType specifies the license vendor.
+                enum:
+                - Trilio
+                - AWS
+                - Azure
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

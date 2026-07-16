@@ -1,0 +1,19 @@
+id: backup-custom-label-selector
+category: application
+validation_mode: yaml_baseline
+prompt: Create a BackupPlan in namespace 'app' that backs up only resources with labels app=frontend and tier=web using Target 'nfs-target'
+expected_citations:
+- tvk-content/CRDs/backupplan-crd.md
+yaml_validation:
+- expected_kind: BackupPlan
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.namespace: app
+    spec.backupConfig.target.name: nfs-target
+    spec.backupPlanComponents.custom: '*'
+tags:
+- cr-creation
+- yaml-generation
+- label-selector
+- application-backup
+- custom

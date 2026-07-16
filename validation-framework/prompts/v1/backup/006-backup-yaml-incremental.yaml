@@ -1,0 +1,20 @@
+id: backup-yaml-incremental
+category: backup
+validation_mode: yaml_baseline
+prompt: Generate a YAML for an Incremental backup named 'app-incremental' that references a BackupPlan named 'app-backupplan' in namespace 'production'.
+expected_citations:
+- tvk-content/CRDs/backup-crd.md
+yaml_validation:
+- expected_kind: Backup
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.name: app-incremental
+    metadata.namespace: production
+    spec.type: Incremental
+    spec.backupPlan.name: app-backupplan
+    spec.backupPlan.namespace: production
+tags:
+- cr-creation
+- backup
+- yaml
+- incremental-backup

@@ -1,0 +1,18 @@
+id: backupplan-namespace-scope
+category: backupplan
+validation_mode: rubric
+prompt: Can a BackupPlan in namespace 'app' back up resources from namespace 'database'?
+expected_facts:
+- A BackupPlan is namespace-scoped and only protects resources in its own namespace
+- To protect resources spanning multiple namespaces, use ClusterBackupPlan instead of BackupPlan
+- 'ClusterBackupPlan lists the namespaces to protect via spec.backupComponents (an array of {namespace: NAME} entries)'
+- 'ClusterBackupPlan and ClusterBackup are cluster-scoped CRDs, available only when Trilio is installed with applicationScope:
+  Cluster'
+expected_citations:
+- tvk-content/CRDs/backupplan-crd.md
+- tvk-content/CRDs/clusterbackupplan-crd.md
+tags:
+- cr-edge-cases
+- namespace
+- scope
+- limitations

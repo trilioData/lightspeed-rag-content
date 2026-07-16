@@ -1,0 +1,531 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: continuousrestoreplans.triliovault.trilio.io
+spec:
+  group: triliovault.trilio.io
+  names:
+    kind: ContinuousRestorePlan
+    listKind: ContinuousRestorePlanList
+    plural: continuousrestoreplans
+    singular: continuousrestoreplan
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.continuousRestorePolicy.name
+      name: continuous restore policy
+      type: string
+    - jsonPath: .spec.target.name
+      name: target
+      type: string
+    - jsonPath: .status.status
+      name: status
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: ContinuousRestorePlan is the Schema for the ContinuousRestorePlan
+          API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ContinuousRestorePlanSpec defines the desired state of ContinuousRestorePlan
+            properties:
+              continuousRestorePolicy:
+                description: ContinuousRestorePolicy specifies the object references
+                  of ContinuousRestore policy
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  fieldPath:
+                    description: |-
+                      If referring to a piece of an object instead of an entire object, this string
+                      should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                      For example, if the object reference is to a container within a pod, this would take on a value like:
+                      "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                      the event) or if no container name is specified "spec.containers[2]" (container with
+                      index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                      referencing a part of an object.
+                    type: string
+                  kind:
+                    description: |-
+                      Kind of the referent.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                    type: string
+                  name:
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                  namespace:
+                    description: |-
+                      Namespace of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                    type: string
+                  resourceVersion:
+                    description: |-
+                      Specific resourceVersion to which this reference is made, if any.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                    type: string
+                  uid:
+                    description: |-
+                      UID of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              target:
+                description: Target specifies the object references of target used
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  fieldPath:
+                    description: |-
+                      If referring to a piece of an object instead of an entire object, this string
+                      should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                      For example, if the object reference is to a container within a pod, this would take on a value like:
+                      "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                      the event) or if no container name is specified "spec.containers[2]" (container with
+                      index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                      referencing a part of an object.
+                    type: string
+                  kind:
+                    description: |-
+                      Kind of the referent.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                    type: string
+                  name:
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                  namespace:
+                    description: |-
+                      Namespace of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                    type: string
+                  resourceVersion:
+                    description: |-
+                      Specific resourceVersion to which this reference is made, if any.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                    type: string
+                  uid:
+                    description: |-
+                      UID of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              transformComponents:
+                description: TransformComponents specifies the transformation configuration
+                  for PVCs both in custom and helm charts
+                properties:
+                  custom:
+                    description: CustomTransform specifies the Transformation configuration
+                      for Custom label-based backup
+                    items:
+                      description: CustomTransform specifies transformation configuration
+                        for Custom label-based resources
+                      properties:
+                        jsonPatches:
+                          description: JSONPatches specifies the JSON patches to be
+                            applied
+                          items:
+                            properties:
+                              from:
+                                description: From specifies the source element path.
+                                  This field is mandatory for copy/move operation
+                                type: string
+                              op:
+                                description: Op specifies the operation to perform,
+                                  can be test/add/remove/replace/copy/move
+                                enum:
+                                - test
+                                - add
+                                - remove
+                                - replace
+                                - copy
+                                - move
+                                type: string
+                              path:
+                                description: Path specifies the destination element
+                                  path which needs to be transformed
+                                type: string
+                              value:
+                                description: Values specifies the value for any operation.
+                                  This field is mandatory for test/add/replace operation
+                                x-kubernetes-preserve-unknown-fields: true
+                            required:
+                            - op
+                            - path
+                            type: object
+                          minItems: 1
+                          type: array
+                        resources:
+                          description: Resources specifies the resources for which
+                            transformation needs to be applied
+                          properties:
+                            groupVersionKind:
+                              description: GroupVersionKind specifies GVK uniquely
+                                representing particular resource type.
+                              properties:
+                                group:
+                                  type: string
+                                kind:
+                                  type: string
+                                version:
+                                  type: string
+                              type: object
+                            objects:
+                              description: Objects is the list of names of all the
+                                objects of the captured GVK
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - groupVersionKind
+                          type: object
+                        transformName:
+                          description: TransformName specifies the name of transformation
+                          type: string
+                      required:
+                      - jsonPatches
+                      - resources
+                      - transformName
+                      type: object
+                    minItems: 1
+                    type: array
+                  helm:
+                    description: HelmTransform specifies the Transformation configuration
+                      for Helm charts
+                    items:
+                      description: HelmTransform specifies transformation configuration
+                        for Helm
+                      properties:
+                        release:
+                          description: Release specifies the release name for which
+                            the transformation is to be done
+                          type: string
+                        set:
+                          description: Set specifies the key-value pair to be set
+                          items:
+                            description: KeyValue specifies key-value pair for helm
+                              transformation
+                            properties:
+                              key:
+                                description: Key denotes the key for which value is
+                                  to be set
+                                type: string
+                              value:
+                                description: Value denotes the value to be set
+                                type: string
+                            required:
+                            - key
+                            - value
+                            type: object
+                          type: array
+                        setString:
+                          description: SetString specifies the key-value pair to be
+                            set as string
+                          items:
+                            description: KeyValue specifies key-value pair for helm
+                              transformation
+                            properties:
+                              key:
+                                description: Key denotes the key for which value is
+                                  to be set
+                                type: string
+                              value:
+                                description: Value denotes the value to be set
+                                type: string
+                            required:
+                            - key
+                            - value
+                            type: object
+                          type: array
+                        transformName:
+                          description: TransformName specifies the name of transformation
+                          type: string
+                      required:
+                      - release
+                      - transformName
+                      type: object
+                    minItems: 1
+                    type: array
+                type: object
+            required:
+            - continuousRestorePolicy
+            - target
+            type: object
+          status:
+            description: ContinuousRestorePlanStatus defines the observed state of
+              ContinuousRestorePlan
+            properties:
+              condition:
+                description: Condition is the current condition of a ContinuousRestorePlan.
+                items:
+                  description: ContinuousRestorePlanCondition specifies the current
+                    condition of a ContinuousRestorePlan resource.
+                  properties:
+                    phase:
+                      description: Phase defines the current phase of the controller.
+                      enum:
+                      - TargetValidation
+                      - Retention
+                      type: string
+                    reason:
+                      description: A brief message indicating details about why the
+                        component is in this condition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition.
+                      enum:
+                      - InProgress
+                      - Completed
+                      - Failed
+                      type: string
+                    timestamp:
+                      description: Timestamp is the time a condition occurred.
+                      format: date-time
+                      type: string
+                  type: object
+                type: array
+              consistentSetInfo:
+                description: ConsistentSetInfo is the list of ConsistentSet related
+                  info for the number of ConsistentSet defined
+                items:
+                  properties:
+                    consistentSetCompletionTimeStamp:
+                      description: ConsistentSetCompletionTimeStamp is the completion
+                        timestamp of ConsistentSet
+                      format: date-time
+                      type: string
+                    consistentSetCreationTimeStamp:
+                      description: ConsistentSetCreationTimeStamp is the creation
+                        timestamp of ConsistentSet
+                      format: date-time
+                      type: string
+                    consistentSetName:
+                      description: ConsistentSetName is the name of ConsistentSet
+                        created for ContinuousRestore corresponding to the Backup/ClusterBackup
+                      type: string
+                    consistentSetStatus:
+                      description: ConsistentSetStatus is the current Status of ConsistentSet.
+                      enum:
+                      - Available
+                      - InProgress
+                      - Unavailable
+                      - Failed
+                      - InUse
+                      - Queued
+                      type: string
+                    consistentSetUID:
+                      description: ScanInstanceUID is the UID of the ConsistentSet
+                        created for ContinuousRestore corresponding to the Backup/ClusterBackup
+                      type: string
+                    size:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      description: TotalSize is the aggregate size of the data restored
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                  required:
+                  - consistentSetName
+                  - consistentSetUID
+                  type: object
+                minItems: 0
+                type: array
+              stats:
+                description: ContinuousRestorePlanStats defines the stats for a ContinuousRestorePlan
+                properties:
+                  consistentSetSummary:
+                    description: ConsistentSetSummary comprises of ConsistentSet object
+                      references and count of ConsistentSet with different statuses
+                    properties:
+                      lastSuccessfulConsistentSet:
+                        description: LastSuccessfulConsistentSet is the reference
+                          to Latest completed ConsistentSet of a ContinuousRestorePlan
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      lastSuccessfulConsistentSetTimestamp:
+                        description: LastSuccessfulConsistentSetTimestamp is the completion
+                          timestamp of the last successful ConsistentSet created
+                        format: date-time
+                        type: string
+                      latestConsistentSet:
+                        description: LatestConsistentSet is the reference to Latest
+                          ClusterRestore in any state, of a ClusterBackupPlan
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      latestConsistentSetCreationTimestamp:
+                        description: LatestConsistentSetCreationTimestamp is the creation
+                          time stamp of the last ConsistentSet created for this BackupPlan/ClusterBackupPlan
+                        format: date-time
+                        type: string
+                      totalAvailableConsistentSet:
+                        description: TotalAvailableConsistentSet is the count of total
+                          number of Available ConsistentSets
+                        format: int32
+                        type: integer
+                      totalFailedConsistentSet:
+                        description: TotalFailedConsistentSet is the count of total
+                          number of Failed ConsistentSets
+                        format: int32
+                        type: integer
+                      totalInProgressConsistentSet:
+                        description: TotalInProgressConsistentSet is the count of
+                          total number of InProgress ConsistentSets
+                        format: int32
+                        type: integer
+                      totalInUseConsistentSet:
+                        description: TotalInUseConsistentSet is the count of total
+                          number of InUse ConsistentSets
+                        format: int32
+                        type: integer
+                      totalQueuedConsistentSet:
+                        description: TotalQueuedConsistentSet is the count of total
+                          number of Queued ConsistentSets
+                        format: int32
+                        type: integer
+                      totalUnavailableConsistentSet:
+                        description: TotalUnavailableConsistentSet is the count of
+                          total number of Unavailable ConsistentSets
+                        format: int32
+                        type: integer
+                    type: object
+                  sourceBackupPlan:
+                    properties:
+                      kind:
+                        enum:
+                        - BackupPlan
+                        - ClusterBackupPlan
+                        type: string
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    type: object
+                  sourceInstanceInfo:
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                    type: object
+                type: object
+              status:
+                description: Status defines the status of the ContinuousRestorePlan
+                  resource as per the status of target
+                enum:
+                - Available
+                - InProgress
+                - Unavailable
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

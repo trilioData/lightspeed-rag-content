@@ -1,0 +1,18 @@
+id: clusterbackupplan-namespace-selector-vs-backupcomponents
+category: clusterbackupplan
+validation_mode: rubric
+prompt: What is the difference between namespaceSelector and backupComponents in ClusterBackupPlan?
+expected_facts:
+- spec.backupComponents is a list of BackupComponent objects, each entry providing a namespace name to back up
+- spec.namespaceSelector is a list of NamespaceSelector objects that select namespaces dynamically using labels and matchExpressions
+- Both spec.backupComponents and spec.namespaceSelector are optional fields on ClusterBackupPlanSpec
+- backupComponents requires a minimum of 1 item when set
+- namespaceSelector is intended for label-driven selection where the set of protected namespaces can grow or shrink without
+  editing the ClusterBackupPlan
+expected_citations:
+- tvk-content/CRDs/clusterbackupplan-crd.md
+tags:
+- cr-api
+- clusterbackupplan
+- namespace-selection
+- comparison

@@ -1,0 +1,19 @@
+id: backup-scheduled-daily-full
+category: scheduling
+validation_mode: yaml_baseline
+prompt: Create a BackupPlan with daily scheduled full backup at 2 AM using Schedule Policy 'daily-schedule'
+expected_citations:
+- tvk-content/CRDs/backupplan-crd.md
+- tvk-content/CRDs/policy-crd.md
+yaml_validation:
+- expected_kind: BackupPlan
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.backupConfig.target.name: '*'
+    spec.backupConfig.schedulePolicy.fullBackupPolicy.name: daily-schedule
+    spec.backupConfig.schedulePolicy.fullBackupPolicy.namespace: '*'
+tags:
+- cr-creation
+- yaml-generation
+- scheduling
+- automation

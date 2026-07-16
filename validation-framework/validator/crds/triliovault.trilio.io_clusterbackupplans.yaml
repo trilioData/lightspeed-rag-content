@@ -1,0 +1,2633 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: clusterbackupplans.triliovault.trilio.io
+spec:
+  group: triliovault.trilio.io
+  names:
+    kind: ClusterBackupPlan
+    listKind: ClusterBackupPlanList
+    plural: clusterbackupplans
+    singular: clusterbackupplan
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.backupConfig.target.name
+      name: backup target
+      type: string
+    - jsonPath: .spec.snapshotConfig.target.name
+      name: snapshot target
+      type: string
+    - jsonPath: .spec.backupConfig.retentionPolicy.name
+      name: backup retention policy
+      type: string
+    - jsonPath: .spec.snapshotConfig.retentionPolicy.name
+      name: snapshot retention policy
+      type: string
+    - jsonPath: .spec.backupConfig.schedulePolicy.incrementalBackupPolicy.name
+      name: incremental backup policy
+      type: string
+    - jsonPath: .spec.backupConfig.schedulePolicy.fullBackupPolicy.name
+      name: full backup policy
+      type: string
+    - jsonPath: .spec.snapshotConfig.schedulePolicy.snapshotPolicy.name
+      name: snapshot schedule policy
+      type: string
+    - jsonPath: .status.status
+      name: status
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: ClusterBackupPlan is the Schema for the ClusterBackupPlan API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ClusterBackupPlanSpec defines the desired state of ClusterBackupPlan
+            properties:
+              backupComponents:
+                description: |-
+                  BackupComponents defines all the BackupComponents for which backups are to be taken.
+                  It includes namespaces and their configurations
+                items:
+                  description: BackupComponent defines the namespace and their configurations
+                    for backup
+                  properties:
+                    excludeResources:
+                      description: ExcludedResources specifies the resources excluded
+                        during backup
+                      properties:
+                        gvkSelector:
+                          description: |-
+                            GVKSelector specify resource selection using GVK & object name based selection
+                            Default ignore list won't be considered for these resources and will always be backed up whatever is specified
+                          items:
+                            description: Resource defines the list of names of a Kubernetes
+                              resource of a particular GVK.
+                            properties:
+                              groupVersionKind:
+                                description: GroupVersionKind specifies GVK uniquely
+                                  representing particular resource type.
+                                properties:
+                                  group:
+                                    type: string
+                                  kind:
+                                    type: string
+                                  version:
+                                    type: string
+                                type: object
+                              objects:
+                                description: Objects is the list of names of all the
+                                  objects of the captured GVK
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - groupVersionKind
+                            type: object
+                          minItems: 1
+                          type: array
+                        labelSelector:
+                          description: LabelSelector specifies resource selection
+                            using labels & match expression
+                          items:
+                            description: |-
+                              A label selector is a label query over a set of resources. The result of matchLabels and
+                              matchExpressions are ANDed. An empty label selector matches all objects. A null
+                              label selector matches no objects.
+                            properties:
+                              matchExpressions:
+                                description: matchExpressions is a list of label selector
+                                  requirements. The requirements are ANDed.
+                                items:
+                                  description: |-
+                                    A label selector requirement is a selector that contains values, a key, and an operator that
+                                    relates the key and values.
+                                  properties:
+                                    key:
+                                      description: key is the label key that the selector
+                                        applies to.
+                                      type: string
+                                    operator:
+                                      description: |-
+                                        operator represents a key's relationship to a set of values.
+                                        Valid operators are In, NotIn, Exists and DoesNotExist.
+                                      type: string
+                                    values:
+                                      description: |-
+                                        values is an array of string values. If the operator is In or NotIn,
+                                        the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                        the values array must be empty. This array is replaced during a strategic
+                                        merge patch.
+                                      items:
+                                        type: string
+                                      type: array
+                                      x-kubernetes-list-type: atomic
+                                  required:
+                                  - key
+                                  - operator
+                                  type: object
+                                type: array
+                                x-kubernetes-list-type: atomic
+                              matchLabels:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                  map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                  operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                type: object
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                      type: object
+                    hookConfig:
+                      description: hookConfig defines backup pre/post hooks and their
+                        configurations.
+                      properties:
+                        hooks:
+                          description: Hooks defines the config's for hook action
+                            object reference to the matching regexes of pod and containers
+                          items:
+                            description: HookInfo defines the config for hook action
+                              object reference to the matching regexes of pod and
+                              containers
+                            properties:
+                              containerRegex:
+                                description: |-
+                                  ContainerRegex identifies containers for hook execution from pods which are filtered using PodSelector.
+                                  If not given then hooks will be executed in all the containers of the identified pods
+                                type: string
+                              hook:
+                                description: Hook is the object reference of the Hook
+                                  resource which will be run while quiescing
+                                properties:
+                                  apiVersion:
+                                    description: API version of the referent.
+                                    type: string
+                                  fieldPath:
+                                    description: |-
+                                      If referring to a piece of an object instead of an entire object, this string
+                                      should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                      For example, if the object reference is to a container within a pod, this would take on a value like:
+                                      "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                      the event) or if no container name is specified "spec.containers[2]" (container with
+                                      index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                      referencing a part of an object.
+                                    type: string
+                                  kind:
+                                    description: |-
+                                      Kind of the referent.
+                                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                                    type: string
+                                  name:
+                                    description: |-
+                                      Name of the referent.
+                                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    type: string
+                                  namespace:
+                                    description: |-
+                                      Namespace of the referent.
+                                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                    type: string
+                                  resourceVersion:
+                                    description: |-
+                                      Specific resourceVersion to which this reference is made, if any.
+                                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                                    type: string
+                                  uid:
+                                    description: |-
+                                      UID of the referent.
+                                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                                    type: string
+                                type: object
+                                x-kubernetes-map-type: atomic
+                              podSelector:
+                                description: |-
+                                  PodSelector will identify set of pods for hook config based on
+                                  either Labels or Regex pattern.
+                                properties:
+                                  labels:
+                                    items:
+                                      description: |-
+                                        A label selector is a label query over a set of resources. The result of matchLabels and
+                                        matchExpressions are ANDed. An empty label selector matches all objects. A null
+                                        label selector matches no objects.
+                                      properties:
+                                        matchExpressions:
+                                          description: matchExpressions is a list
+                                            of label selector requirements. The requirements
+                                            are ANDed.
+                                          items:
+                                            description: |-
+                                              A label selector requirement is a selector that contains values, a key, and an operator that
+                                              relates the key and values.
+                                            properties:
+                                              key:
+                                                description: key is the label key
+                                                  that the selector applies to.
+                                                type: string
+                                              operator:
+                                                description: |-
+                                                  operator represents a key's relationship to a set of values.
+                                                  Valid operators are In, NotIn, Exists and DoesNotExist.
+                                                type: string
+                                              values:
+                                                description: |-
+                                                  values is an array of string values. If the operator is In or NotIn,
+                                                  the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                                  the values array must be empty. This array is replaced during a strategic
+                                                  merge patch.
+                                                items:
+                                                  type: string
+                                                type: array
+                                                x-kubernetes-list-type: atomic
+                                            required:
+                                            - key
+                                            - operator
+                                            type: object
+                                          type: array
+                                          x-kubernetes-list-type: atomic
+                                        matchLabels:
+                                          additionalProperties:
+                                            type: string
+                                          description: |-
+                                            matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                            map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                            operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                          type: object
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                  regex:
+                                    type: string
+                                type: object
+                            required:
+                            - hook
+                            - podSelector
+                            type: object
+                          minItems: 1
+                          type: array
+                        mode:
+                          description: |-
+                            Mode can be sequential or parallel which defines the way hooks will be executed.
+                            If mode is parallel, ignore the hook sequence.
+                          enum:
+                          - Sequential
+                          - Parallel
+                          type: string
+                        podReadyWaitSeconds:
+                          description: |-
+                            PodReadyWaitSeconds is the wait time for which hook execution waits before performing hook Quiescing/UnQuiescing
+                            It is only applicable for pods which are found in NotRunning state during hook execution
+                            Default value is 120s, that will be set by webhook.
+                          maximum: 600
+                          minimum: 1
+                          type: integer
+                      required:
+                      - hooks
+                      type: object
+                    includeResources:
+                      description: IncludeResources specifies the resources included
+                        during backup
+                      properties:
+                        gvkSelector:
+                          description: |-
+                            GVKSelector specify resource selection using GVK & object name based selection
+                            Default ignore list won't be considered for these resources and will always be backed up whatever is specified
+                          items:
+                            description: Resource defines the list of names of a Kubernetes
+                              resource of a particular GVK.
+                            properties:
+                              groupVersionKind:
+                                description: GroupVersionKind specifies GVK uniquely
+                                  representing particular resource type.
+                                properties:
+                                  group:
+                                    type: string
+                                  kind:
+                                    type: string
+                                  version:
+                                    type: string
+                                type: object
+                              objects:
+                                description: Objects is the list of names of all the
+                                  objects of the captured GVK
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - groupVersionKind
+                            type: object
+                          minItems: 1
+                          type: array
+                        labelSelector:
+                          description: LabelSelector specifies resource selection
+                            using labels & match expression
+                          items:
+                            description: |-
+                              A label selector is a label query over a set of resources. The result of matchLabels and
+                              matchExpressions are ANDed. An empty label selector matches all objects. A null
+                              label selector matches no objects.
+                            properties:
+                              matchExpressions:
+                                description: matchExpressions is a list of label selector
+                                  requirements. The requirements are ANDed.
+                                items:
+                                  description: |-
+                                    A label selector requirement is a selector that contains values, a key, and an operator that
+                                    relates the key and values.
+                                  properties:
+                                    key:
+                                      description: key is the label key that the selector
+                                        applies to.
+                                      type: string
+                                    operator:
+                                      description: |-
+                                        operator represents a key's relationship to a set of values.
+                                        Valid operators are In, NotIn, Exists and DoesNotExist.
+                                      type: string
+                                    values:
+                                      description: |-
+                                        values is an array of string values. If the operator is In or NotIn,
+                                        the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                        the values array must be empty. This array is replaced during a strategic
+                                        merge patch.
+                                      items:
+                                        type: string
+                                      type: array
+                                      x-kubernetes-list-type: atomic
+                                  required:
+                                  - key
+                                  - operator
+                                  type: object
+                                type: array
+                                x-kubernetes-list-type: atomic
+                              matchLabels:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                  map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                  operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                type: object
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                      type: object
+                    namespace:
+                      type: string
+                    retainHelmApps:
+                      description: |-
+                        RetainHelmApps is a bool value that states that backup the helm application using helm way
+                        while taking namespace backup.
+                      type: boolean
+                  required:
+                  - namespace
+                  type: object
+                minItems: 1
+                type: array
+              backupConfig:
+                description: BackupConfig is the type containing the object references
+                  for all the configurations needed for cluster backup operation
+                properties:
+                  maxIncrBackupsPerFullBackup:
+                    description: |-
+                      MaxIncrBackupsPerFullBackup is the number of incremental backups after which full backup will ge triggered.
+                      This is relevant only in case of immutable backups
+                    maximum: 15
+                    minimum: 1
+                    type: integer
+                  retentionPolicy:
+                    description: RetentionPolicy is the object reference for the policy
+                      of type retention defined
+                    properties:
+                      apiVersion:
+                        description: API version of the referent.
+                        type: string
+                      fieldPath:
+                        description: |-
+                          If referring to a piece of an object instead of an entire object, this string
+                          should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                          For example, if the object reference is to a container within a pod, this would take on a value like:
+                          "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                          the event) or if no container name is specified "spec.containers[2]" (container with
+                          index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                          referencing a part of an object.
+                        type: string
+                      kind:
+                        description: |-
+                          Kind of the referent.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                        type: string
+                      name:
+                        description: |-
+                          Name of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        type: string
+                      namespace:
+                        description: |-
+                          Namespace of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                        type: string
+                      resourceVersion:
+                        description: |-
+                          Specific resourceVersion to which this reference is made, if any.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                        type: string
+                      uid:
+                        description: |-
+                          UID of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                        type: string
+                    type: object
+                    x-kubernetes-map-type: atomic
+                  schedulePolicy:
+                    description: 'SchedulePolicy includes the object references of
+                      2 type of cron schedule policy: incremental and full'
+                    properties:
+                      fullBackupPolicy:
+                        description: FullBackupPolicy is the object reference for
+                          the policy of type schedule defined
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      incrementalBackupPolicy:
+                        description: IncrementalBackupPolicy is the object reference
+                          for the policy of type schedule defined
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                  target:
+                    description: Target is the object reference for the backup target
+                      resources
+                    properties:
+                      apiVersion:
+                        description: API version of the referent.
+                        type: string
+                      fieldPath:
+                        description: |-
+                          If referring to a piece of an object instead of an entire object, this string
+                          should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                          For example, if the object reference is to a container within a pod, this would take on a value like:
+                          "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                          the event) or if no container name is specified "spec.containers[2]" (container with
+                          index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                          referencing a part of an object.
+                        type: string
+                      kind:
+                        description: |-
+                          Kind of the referent.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                        type: string
+                      name:
+                        description: |-
+                          Name of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        type: string
+                      namespace:
+                        description: |-
+                          Namespace of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                        type: string
+                      resourceVersion:
+                        description: |-
+                          Specific resourceVersion to which this reference is made, if any.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                        type: string
+                      uid:
+                        description: |-
+                          UID of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                        type: string
+                    type: object
+                    x-kubernetes-map-type: atomic
+                required:
+                - target
+                type: object
+              clusterBackupPlanFlags:
+                description: BackupPlanFlags specifies all the flags specified at
+                  the cluster backup plan level.
+                properties:
+                  pauseSchedule:
+                    description: PauseSchedule is flag to pause all the schedule backups
+                      or snapshot for a backupplan/clusterbackupplan.
+                    type: boolean
+                  retainHelmApps:
+                    description: |-
+                      RetainHelmApps is a bool value that states that backup the helm application using helm way
+                      while taking namespace backup.
+                    type: boolean
+                  skipImageBackup:
+                    description: SkipImageBackup is flag to skip the container images
+                      backup
+                    type: boolean
+                type: object
+              continuousRestoreConfig:
+                description: ContinuousRestoreConfig defines the Continuous Restore
+                  config to be used
+                properties:
+                  continuousRestoreInstances:
+                    description: ContinuousRestoreInstances defines the list of Continuous
+                      Restore instances which will perform the Continuous Restore
+                      operation
+                    items:
+                      description: ContinuousRestoreInstance defines details of Continuous
+                        Restore for InstanceID specified
+                      properties:
+                        continuousRestorePolicy:
+                          description: ContinuousRestorePolicy is the object reference
+                            to the Continuous Restore Policy to be used for Continuous
+                            Restore
+                          properties:
+                            apiVersion:
+                              description: API version of the referent.
+                              type: string
+                            fieldPath:
+                              description: |-
+                                If referring to a piece of an object instead of an entire object, this string
+                                should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                For example, if the object reference is to a container within a pod, this would take on a value like:
+                                "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                the event) or if no container name is specified "spec.containers[2]" (container with
+                                index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                referencing a part of an object.
+                              type: string
+                            kind:
+                              description: |-
+                                Kind of the referent.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                              type: string
+                            name:
+                              description: |-
+                                Name of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            namespace:
+                              description: |-
+                                Namespace of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                              type: string
+                            resourceVersion:
+                              description: |-
+                                Specific resourceVersion to which this reference is made, if any.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                              type: string
+                            uid:
+                              description: |-
+                                UID of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                              type: string
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        instanceID:
+                          description: InstanceID is the unique Instance ID of the
+                            Continuous Restore Service to be used for Continuous Restore
+                          type: string
+                        transformComponents:
+                          description: TransformComponents specifies the transformation
+                            configuration for PVCs both in custom and helm charts
+                          properties:
+                            custom:
+                              description: CustomTransform specifies the Transformation
+                                configuration for Custom label-based backup
+                              items:
+                                description: CustomTransform specifies transformation
+                                  configuration for Custom label-based resources
+                                properties:
+                                  jsonPatches:
+                                    description: JSONPatches specifies the JSON patches
+                                      to be applied
+                                    items:
+                                      properties:
+                                        from:
+                                          description: From specifies the source element
+                                            path. This field is mandatory for copy/move
+                                            operation
+                                          type: string
+                                        op:
+                                          description: Op specifies the operation
+                                            to perform, can be test/add/remove/replace/copy/move
+                                          enum:
+                                          - test
+                                          - add
+                                          - remove
+                                          - replace
+                                          - copy
+                                          - move
+                                          type: string
+                                        path:
+                                          description: Path specifies the destination
+                                            element path which needs to be transformed
+                                          type: string
+                                        value:
+                                          description: Values specifies the value
+                                            for any operation. This field is mandatory
+                                            for test/add/replace operation
+                                          x-kubernetes-preserve-unknown-fields: true
+                                      required:
+                                      - op
+                                      - path
+                                      type: object
+                                    minItems: 1
+                                    type: array
+                                  resources:
+                                    description: Resources specifies the resources
+                                      for which transformation needs to be applied
+                                    properties:
+                                      groupVersionKind:
+                                        description: GroupVersionKind specifies GVK
+                                          uniquely representing particular resource
+                                          type.
+                                        properties:
+                                          group:
+                                            type: string
+                                          kind:
+                                            type: string
+                                          version:
+                                            type: string
+                                        type: object
+                                      objects:
+                                        description: Objects is the list of names
+                                          of all the objects of the captured GVK
+                                        items:
+                                          type: string
+                                        type: array
+                                    required:
+                                    - groupVersionKind
+                                    type: object
+                                  transformName:
+                                    description: TransformName specifies the name
+                                      of transformation
+                                    type: string
+                                required:
+                                - jsonPatches
+                                - resources
+                                - transformName
+                                type: object
+                              minItems: 1
+                              type: array
+                            helm:
+                              description: HelmTransform specifies the Transformation
+                                configuration for Helm charts
+                              items:
+                                description: HelmTransform specifies transformation
+                                  configuration for Helm
+                                properties:
+                                  release:
+                                    description: Release specifies the release name
+                                      for which the transformation is to be done
+                                    type: string
+                                  set:
+                                    description: Set specifies the key-value pair
+                                      to be set
+                                    items:
+                                      description: KeyValue specifies key-value pair
+                                        for helm transformation
+                                      properties:
+                                        key:
+                                          description: Key denotes the key for which
+                                            value is to be set
+                                          type: string
+                                        value:
+                                          description: Value denotes the value to
+                                            be set
+                                          type: string
+                                      required:
+                                      - key
+                                      - value
+                                      type: object
+                                    type: array
+                                  setString:
+                                    description: SetString specifies the key-value
+                                      pair to be set as string
+                                    items:
+                                      description: KeyValue specifies key-value pair
+                                        for helm transformation
+                                      properties:
+                                        key:
+                                          description: Key denotes the key for which
+                                            value is to be set
+                                          type: string
+                                        value:
+                                          description: Value denotes the value to
+                                            be set
+                                          type: string
+                                      required:
+                                      - key
+                                      - value
+                                      type: object
+                                    type: array
+                                  transformName:
+                                    description: TransformName specifies the name
+                                      of transformation
+                                    type: string
+                                required:
+                                - release
+                                - transformName
+                                type: object
+                              minItems: 1
+                              type: array
+                          type: object
+                      required:
+                      - continuousRestorePolicy
+                      - instanceID
+                      type: object
+                    minItems: 1
+                    type: array
+                required:
+                - continuousRestoreInstances
+                type: object
+              encryption:
+                description: Encryption specify how to encrypt backups on target for
+                  this backupPlan
+                properties:
+                  encryptionSecret:
+                    description: EncryptionSecret is object ref of a secret which
+                      contains encryption key for backup encryption
+                    properties:
+                      apiVersion:
+                        description: API version of the referent.
+                        type: string
+                      fieldPath:
+                        description: |-
+                          If referring to a piece of an object instead of an entire object, this string
+                          should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                          For example, if the object reference is to a container within a pod, this would take on a value like:
+                          "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                          the event) or if no container name is specified "spec.containers[2]" (container with
+                          index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                          referencing a part of an object.
+                        type: string
+                      kind:
+                        description: |-
+                          Kind of the referent.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                        type: string
+                      name:
+                        description: |-
+                          Name of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        type: string
+                      namespace:
+                        description: |-
+                          Namespace of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                        type: string
+                      resourceVersion:
+                        description: |-
+                          Specific resourceVersion to which this reference is made, if any.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                        type: string
+                      uid:
+                        description: |-
+                          UID of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                        type: string
+                    type: object
+                    x-kubernetes-map-type: atomic
+                required:
+                - encryptionSecret
+                type: object
+              excludeResources:
+                description: ExcludedResources specifies the resources to be excluded
+                  from the backup
+                properties:
+                  gvkSelector:
+                    description: |-
+                      GVKSelector specify resource selection using GVK & object name based selection
+                      Default ignore list won't be considered for these resources and will always be backed up whatever is specified
+                    items:
+                      description: Resource defines the list of names of a Kubernetes
+                        resource of a particular GVK.
+                      properties:
+                        groupVersionKind:
+                          description: GroupVersionKind specifies GVK uniquely representing
+                            particular resource type.
+                          properties:
+                            group:
+                              type: string
+                            kind:
+                              type: string
+                            version:
+                              type: string
+                          type: object
+                        objects:
+                          description: Objects is the list of names of all the objects
+                            of the captured GVK
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - groupVersionKind
+                      type: object
+                    minItems: 1
+                    type: array
+                  labelSelector:
+                    description: LabelSelector specifies resource selection using
+                      labels & match expression
+                    items:
+                      description: |-
+                        A label selector is a label query over a set of resources. The result of matchLabels and
+                        matchExpressions are ANDed. An empty label selector matches all objects. A null
+                        label selector matches no objects.
+                      properties:
+                        matchExpressions:
+                          description: matchExpressions is a list of label selector
+                            requirements. The requirements are ANDed.
+                          items:
+                            description: |-
+                              A label selector requirement is a selector that contains values, a key, and an operator that
+                              relates the key and values.
+                            properties:
+                              key:
+                                description: key is the label key that the selector
+                                  applies to.
+                                type: string
+                              operator:
+                                description: |-
+                                  operator represents a key's relationship to a set of values.
+                                  Valid operators are In, NotIn, Exists and DoesNotExist.
+                                type: string
+                              values:
+                                description: |-
+                                  values is an array of string values. If the operator is In or NotIn,
+                                  the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                  the values array must be empty. This array is replaced during a strategic
+                                  merge patch.
+                                items:
+                                  type: string
+                                type: array
+                                x-kubernetes-list-type: atomic
+                            required:
+                            - key
+                            - operator
+                            type: object
+                          type: array
+                          x-kubernetes-list-type: atomic
+                        matchLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                            map is equivalent to an element of matchExpressions, whose key field is "key", the
+                            operator is "In", and the values array contains only "value". The requirements are ANDed.
+                          type: object
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    minItems: 1
+                    type: array
+                type: object
+              includeResources:
+                description: IncludeResources specifies the resources to be explicitly
+                  included during backup
+                properties:
+                  gvkSelector:
+                    description: |-
+                      GVKSelector specify resource selection using GVK & object name based selection
+                      Default ignore list won't be considered for these resources and will always be backed up whatever is specified
+                    items:
+                      description: Resource defines the list of names of a Kubernetes
+                        resource of a particular GVK.
+                      properties:
+                        groupVersionKind:
+                          description: GroupVersionKind specifies GVK uniquely representing
+                            particular resource type.
+                          properties:
+                            group:
+                              type: string
+                            kind:
+                              type: string
+                            version:
+                              type: string
+                          type: object
+                        objects:
+                          description: Objects is the list of names of all the objects
+                            of the captured GVK
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - groupVersionKind
+                      type: object
+                    minItems: 1
+                    type: array
+                  labelSelector:
+                    description: LabelSelector specifies resource selection using
+                      labels & match expression
+                    items:
+                      description: |-
+                        A label selector is a label query over a set of resources. The result of matchLabels and
+                        matchExpressions are ANDed. An empty label selector matches all objects. A null
+                        label selector matches no objects.
+                      properties:
+                        matchExpressions:
+                          description: matchExpressions is a list of label selector
+                            requirements. The requirements are ANDed.
+                          items:
+                            description: |-
+                              A label selector requirement is a selector that contains values, a key, and an operator that
+                              relates the key and values.
+                            properties:
+                              key:
+                                description: key is the label key that the selector
+                                  applies to.
+                                type: string
+                              operator:
+                                description: |-
+                                  operator represents a key's relationship to a set of values.
+                                  Valid operators are In, NotIn, Exists and DoesNotExist.
+                                type: string
+                              values:
+                                description: |-
+                                  values is an array of string values. If the operator is In or NotIn,
+                                  the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                  the values array must be empty. This array is replaced during a strategic
+                                  merge patch.
+                                items:
+                                  type: string
+                                type: array
+                                x-kubernetes-list-type: atomic
+                            required:
+                            - key
+                            - operator
+                            type: object
+                          type: array
+                          x-kubernetes-list-type: atomic
+                        matchLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                            map is equivalent to an element of matchExpressions, whose key field is "key", the
+                            operator is "In", and the values array contains only "value". The requirements are ANDed.
+                          type: object
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    minItems: 1
+                    type: array
+                type: object
+              namespaceSelector:
+                description: |-
+                  NamespaceSelector defines namespaces for which backups are to be taken based on
+                  NamespaceSelector(labels & match expression) & their configurations
+                items:
+                  description: |-
+                    NamespaceSelector defines namespaces for which backups are to be taken based on
+                    NamespaceSelector(labels & match expression) & their configurations
+                  properties:
+                    excludeResources:
+                      description: ExcludedResources specifies the resources excluded
+                        during backup
+                      properties:
+                        gvkSelector:
+                          description: |-
+                            GVKSelector specify resource selection using GVK & object name based selection
+                            Default ignore list won't be considered for these resources and will always be backed up whatever is specified
+                          items:
+                            description: Resource defines the list of names of a Kubernetes
+                              resource of a particular GVK.
+                            properties:
+                              groupVersionKind:
+                                description: GroupVersionKind specifies GVK uniquely
+                                  representing particular resource type.
+                                properties:
+                                  group:
+                                    type: string
+                                  kind:
+                                    type: string
+                                  version:
+                                    type: string
+                                type: object
+                              objects:
+                                description: Objects is the list of names of all the
+                                  objects of the captured GVK
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - groupVersionKind
+                            type: object
+                          minItems: 1
+                          type: array
+                        labelSelector:
+                          description: LabelSelector specifies resource selection
+                            using labels & match expression
+                          items:
+                            description: |-
+                              A label selector is a label query over a set of resources. The result of matchLabels and
+                              matchExpressions are ANDed. An empty label selector matches all objects. A null
+                              label selector matches no objects.
+                            properties:
+                              matchExpressions:
+                                description: matchExpressions is a list of label selector
+                                  requirements. The requirements are ANDed.
+                                items:
+                                  description: |-
+                                    A label selector requirement is a selector that contains values, a key, and an operator that
+                                    relates the key and values.
+                                  properties:
+                                    key:
+                                      description: key is the label key that the selector
+                                        applies to.
+                                      type: string
+                                    operator:
+                                      description: |-
+                                        operator represents a key's relationship to a set of values.
+                                        Valid operators are In, NotIn, Exists and DoesNotExist.
+                                      type: string
+                                    values:
+                                      description: |-
+                                        values is an array of string values. If the operator is In or NotIn,
+                                        the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                        the values array must be empty. This array is replaced during a strategic
+                                        merge patch.
+                                      items:
+                                        type: string
+                                      type: array
+                                      x-kubernetes-list-type: atomic
+                                  required:
+                                  - key
+                                  - operator
+                                  type: object
+                                type: array
+                                x-kubernetes-list-type: atomic
+                              matchLabels:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                  map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                  operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                type: object
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                      type: object
+                    hookConfig:
+                      description: hookConfig defines backup pre/post hooks and their
+                        configurations.
+                      properties:
+                        hooks:
+                          description: Hooks defines the config's for hook action
+                            object reference to the matching regexes of pod and containers
+                          items:
+                            description: HookInfo defines the config for hook action
+                              object reference to the matching regexes of pod and
+                              containers
+                            properties:
+                              containerRegex:
+                                description: |-
+                                  ContainerRegex identifies containers for hook execution from pods which are filtered using PodSelector.
+                                  If not given then hooks will be executed in all the containers of the identified pods
+                                type: string
+                              hook:
+                                description: Hook is the object reference of the Hook
+                                  resource which will be run while quiescing
+                                properties:
+                                  apiVersion:
+                                    description: API version of the referent.
+                                    type: string
+                                  fieldPath:
+                                    description: |-
+                                      If referring to a piece of an object instead of an entire object, this string
+                                      should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                      For example, if the object reference is to a container within a pod, this would take on a value like:
+                                      "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                      the event) or if no container name is specified "spec.containers[2]" (container with
+                                      index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                      referencing a part of an object.
+                                    type: string
+                                  kind:
+                                    description: |-
+                                      Kind of the referent.
+                                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                                    type: string
+                                  name:
+                                    description: |-
+                                      Name of the referent.
+                                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    type: string
+                                  namespace:
+                                    description: |-
+                                      Namespace of the referent.
+                                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                    type: string
+                                  resourceVersion:
+                                    description: |-
+                                      Specific resourceVersion to which this reference is made, if any.
+                                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                                    type: string
+                                  uid:
+                                    description: |-
+                                      UID of the referent.
+                                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                                    type: string
+                                type: object
+                                x-kubernetes-map-type: atomic
+                              podSelector:
+                                description: |-
+                                  PodSelector will identify set of pods for hook config based on
+                                  either Labels or Regex pattern.
+                                properties:
+                                  labels:
+                                    items:
+                                      description: |-
+                                        A label selector is a label query over a set of resources. The result of matchLabels and
+                                        matchExpressions are ANDed. An empty label selector matches all objects. A null
+                                        label selector matches no objects.
+                                      properties:
+                                        matchExpressions:
+                                          description: matchExpressions is a list
+                                            of label selector requirements. The requirements
+                                            are ANDed.
+                                          items:
+                                            description: |-
+                                              A label selector requirement is a selector that contains values, a key, and an operator that
+                                              relates the key and values.
+                                            properties:
+                                              key:
+                                                description: key is the label key
+                                                  that the selector applies to.
+                                                type: string
+                                              operator:
+                                                description: |-
+                                                  operator represents a key's relationship to a set of values.
+                                                  Valid operators are In, NotIn, Exists and DoesNotExist.
+                                                type: string
+                                              values:
+                                                description: |-
+                                                  values is an array of string values. If the operator is In or NotIn,
+                                                  the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                                  the values array must be empty. This array is replaced during a strategic
+                                                  merge patch.
+                                                items:
+                                                  type: string
+                                                type: array
+                                                x-kubernetes-list-type: atomic
+                                            required:
+                                            - key
+                                            - operator
+                                            type: object
+                                          type: array
+                                          x-kubernetes-list-type: atomic
+                                        matchLabels:
+                                          additionalProperties:
+                                            type: string
+                                          description: |-
+                                            matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                            map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                            operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                          type: object
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                  regex:
+                                    type: string
+                                type: object
+                            required:
+                            - hook
+                            - podSelector
+                            type: object
+                          minItems: 1
+                          type: array
+                        mode:
+                          description: |-
+                            Mode can be sequential or parallel which defines the way hooks will be executed.
+                            If mode is parallel, ignore the hook sequence.
+                          enum:
+                          - Sequential
+                          - Parallel
+                          type: string
+                        podReadyWaitSeconds:
+                          description: |-
+                            PodReadyWaitSeconds is the wait time for which hook execution waits before performing hook Quiescing/UnQuiescing
+                            It is only applicable for pods which are found in NotRunning state during hook execution
+                            Default value is 120s, that will be set by webhook.
+                          maximum: 600
+                          minimum: 1
+                          type: integer
+                      required:
+                      - hooks
+                      type: object
+                    includeResources:
+                      description: IncludeResources specifies the resources included
+                        during backup
+                      properties:
+                        gvkSelector:
+                          description: |-
+                            GVKSelector specify resource selection using GVK & object name based selection
+                            Default ignore list won't be considered for these resources and will always be backed up whatever is specified
+                          items:
+                            description: Resource defines the list of names of a Kubernetes
+                              resource of a particular GVK.
+                            properties:
+                              groupVersionKind:
+                                description: GroupVersionKind specifies GVK uniquely
+                                  representing particular resource type.
+                                properties:
+                                  group:
+                                    type: string
+                                  kind:
+                                    type: string
+                                  version:
+                                    type: string
+                                type: object
+                              objects:
+                                description: Objects is the list of names of all the
+                                  objects of the captured GVK
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - groupVersionKind
+                            type: object
+                          minItems: 1
+                          type: array
+                        labelSelector:
+                          description: LabelSelector specifies resource selection
+                            using labels & match expression
+                          items:
+                            description: |-
+                              A label selector is a label query over a set of resources. The result of matchLabels and
+                              matchExpressions are ANDed. An empty label selector matches all objects. A null
+                              label selector matches no objects.
+                            properties:
+                              matchExpressions:
+                                description: matchExpressions is a list of label selector
+                                  requirements. The requirements are ANDed.
+                                items:
+                                  description: |-
+                                    A label selector requirement is a selector that contains values, a key, and an operator that
+                                    relates the key and values.
+                                  properties:
+                                    key:
+                                      description: key is the label key that the selector
+                                        applies to.
+                                      type: string
+                                    operator:
+                                      description: |-
+                                        operator represents a key's relationship to a set of values.
+                                        Valid operators are In, NotIn, Exists and DoesNotExist.
+                                      type: string
+                                    values:
+                                      description: |-
+                                        values is an array of string values. If the operator is In or NotIn,
+                                        the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                        the values array must be empty. This array is replaced during a strategic
+                                        merge patch.
+                                      items:
+                                        type: string
+                                      type: array
+                                      x-kubernetes-list-type: atomic
+                                  required:
+                                  - key
+                                  - operator
+                                  type: object
+                                type: array
+                                x-kubernetes-list-type: atomic
+                              matchLabels:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                  map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                  operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                type: object
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                      type: object
+                    labelSelector:
+                      description: |-
+                        LabelSelector identifies set of namespaces for which backup are to be taken
+                        based on labels & match expression
+                      items:
+                        description: |-
+                          A label selector is a label query over a set of resources. The result of matchLabels and
+                          matchExpressions are ANDed. An empty label selector matches all objects. A null
+                          label selector matches no objects.
+                        properties:
+                          matchExpressions:
+                            description: matchExpressions is a list of label selector
+                              requirements. The requirements are ANDed.
+                            items:
+                              description: |-
+                                A label selector requirement is a selector that contains values, a key, and an operator that
+                                relates the key and values.
+                              properties:
+                                key:
+                                  description: key is the label key that the selector
+                                    applies to.
+                                  type: string
+                                operator:
+                                  description: |-
+                                    operator represents a key's relationship to a set of values.
+                                    Valid operators are In, NotIn, Exists and DoesNotExist.
+                                  type: string
+                                values:
+                                  description: |-
+                                    values is an array of string values. If the operator is In or NotIn,
+                                    the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                    the values array must be empty. This array is replaced during a strategic
+                                    merge patch.
+                                  items:
+                                    type: string
+                                  type: array
+                                  x-kubernetes-list-type: atomic
+                              required:
+                              - key
+                              - operator
+                              type: object
+                            type: array
+                            x-kubernetes-list-type: atomic
+                          matchLabels:
+                            additionalProperties:
+                              type: string
+                            description: |-
+                              matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                              map is equivalent to an element of matchExpressions, whose key field is "key", the
+                              operator is "In", and the values array contains only "value". The requirements are ANDed.
+                            type: object
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                    name:
+                      description: |-
+                        Name specify name for NamespaceSelector,
+                        useful to identify why namespaces grouped together using LabelSelector
+                      type: string
+                    retainHelmApps:
+                      description: |-
+                        RetainHelmApps is a bool value that states that backup the helm application using helm way
+                        while taking namespace backup.
+                      type: boolean
+                  required:
+                  - name
+                  type: object
+                type: array
+              retainHelmApps:
+                description: |-
+                  RetainHelmApps is a bool value that states that backup the helm application using helm way
+                  while taking namespace backup.
+
+                  Deprecated: RetainHelmApps moved to ClusterBackupPlanFlags
+                type: boolean
+              securityScanConfig:
+                description: SecurityScanConfig defines the Security Scan config to
+                  be used for ClusterBackup scanning
+                properties:
+                  securityServiceInstances:
+                    description: SecurityServiceInstances defines the list of Security
+                      instances which will perform the Backup/ClusterBackup Security
+                      scanning
+                    items:
+                      description: SecurityServiceInstance defines details of Security
+                        Scan for InstanceID specified
+                      properties:
+                        instanceID:
+                          description: InstanceID is the unique Instance ID of the
+                            Security Service to be used for Security Scanning
+                          type: string
+                        scanAllBackups:
+                          description: ScanAllBackups enables Security Scan on all
+                            Backups/ClusterBackups of BackupPlan/ClusterBackupPlan
+                            (old and new)
+                          type: boolean
+                        securityScanPolicy:
+                          description: SecurityScanPolicy is the object reference
+                            to the Security Scan Policy to be used for scanning
+                          properties:
+                            apiVersion:
+                              description: API version of the referent.
+                              type: string
+                            fieldPath:
+                              description: |-
+                                If referring to a piece of an object instead of an entire object, this string
+                                should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                For example, if the object reference is to a container within a pod, this would take on a value like:
+                                "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                the event) or if no container name is specified "spec.containers[2]" (container with
+                                index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                referencing a part of an object.
+                              type: string
+                            kind:
+                              description: |-
+                                Kind of the referent.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                              type: string
+                            name:
+                              description: |-
+                                Name of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            namespace:
+                              description: |-
+                                Namespace of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                              type: string
+                            resourceVersion:
+                              description: |-
+                                Specific resourceVersion to which this reference is made, if any.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                              type: string
+                            uid:
+                              description: |-
+                                UID of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                              type: string
+                          type: object
+                          x-kubernetes-map-type: atomic
+                      required:
+                      - instanceID
+                      type: object
+                    maxItems: 1
+                    minItems: 1
+                    type: array
+                required:
+                - securityServiceInstances
+                type: object
+              snapshotConfig:
+                description: SnapshotConfig is the type containing the object references
+                  for all the configurations needed for cluster snapshot operation
+                properties:
+                  retentionPolicy:
+                    description: RetentionPolicy is the object reference for the policy
+                      of type retention defined
+                    properties:
+                      apiVersion:
+                        description: API version of the referent.
+                        type: string
+                      fieldPath:
+                        description: |-
+                          If referring to a piece of an object instead of an entire object, this string
+                          should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                          For example, if the object reference is to a container within a pod, this would take on a value like:
+                          "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                          the event) or if no container name is specified "spec.containers[2]" (container with
+                          index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                          referencing a part of an object.
+                        type: string
+                      kind:
+                        description: |-
+                          Kind of the referent.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                        type: string
+                      name:
+                        description: |-
+                          Name of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        type: string
+                      namespace:
+                        description: |-
+                          Namespace of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                        type: string
+                      resourceVersion:
+                        description: |-
+                          Specific resourceVersion to which this reference is made, if any.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                        type: string
+                      uid:
+                        description: |-
+                          UID of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                        type: string
+                    type: object
+                    x-kubernetes-map-type: atomic
+                  schedulePolicy:
+                    description: SchedulePolicy includes the object references of
+                      snapshot policy
+                    properties:
+                      snapshotPolicy:
+                        description: SnapshotPolicy is the object reference for the
+                          policy of type Schedule defined
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                  target:
+                    description: Target is the object reference for the target resource
+                    properties:
+                      apiVersion:
+                        description: API version of the referent.
+                        type: string
+                      fieldPath:
+                        description: |-
+                          If referring to a piece of an object instead of an entire object, this string
+                          should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                          For example, if the object reference is to a container within a pod, this would take on a value like:
+                          "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                          the event) or if no container name is specified "spec.containers[2]" (container with
+                          index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                          referencing a part of an object.
+                        type: string
+                      kind:
+                        description: |-
+                          Kind of the referent.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                        type: string
+                      name:
+                        description: |-
+                          Name of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        type: string
+                      namespace:
+                        description: |-
+                          Namespace of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                        type: string
+                      resourceVersion:
+                        description: |-
+                          Specific resourceVersion to which this reference is made, if any.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                        type: string
+                      uid:
+                        description: |-
+                          UID of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                        type: string
+                    type: object
+                    x-kubernetes-map-type: atomic
+                required:
+                - target
+                type: object
+            type: object
+          status:
+            description: ClusterBackupPlanStatus defines the observed state of ClusterBackupPlan
+            properties:
+              backupPlans:
+                additionalProperties:
+                  description: BackupPlanInfo defines the object reference and status
+                    of a backupPlan
+                  properties:
+                    backupPlan:
+                      description: BackupPlan is the object reference of a backupPlan
+                      properties:
+                        apiVersion:
+                          description: API version of the referent.
+                          type: string
+                        fieldPath:
+                          description: |-
+                            If referring to a piece of an object instead of an entire object, this string
+                            should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                            For example, if the object reference is to a container within a pod, this would take on a value like:
+                            "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                            the event) or if no container name is specified "spec.containers[2]" (container with
+                            index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                            referencing a part of an object.
+                          type: string
+                        kind:
+                          description: |-
+                            Kind of the referent.
+                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                          type: string
+                        name:
+                          description: |-
+                            Name of the referent.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          type: string
+                        namespace:
+                          description: |-
+                            Namespace of the referent.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                          type: string
+                        resourceVersion:
+                          description: |-
+                            Specific resourceVersion to which this reference is made, if any.
+                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                          type: string
+                        uid:
+                          description: |-
+                            UID of the referent.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                          type: string
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    name:
+                      description: |-
+                        Name will specify namespace selector's name if backupPlan is PartOf `NamespaceSelector`
+                        Name will be empty if backupPlan is PartOf `BackupComponents`
+                      type: string
+                    partOf:
+                      description: |-
+                        PartOf specify how backupPlan is selected, it could be
+                        by NamespaceSelector or by BackupComponent
+                      enum:
+                      - NamespaceSelector
+                      - BackupComponents
+                      type: string
+                    status:
+                      description: Status is the status of the backupPlan
+                      enum:
+                      - Available
+                      - InProgress
+                      - Unavailable
+                      type: string
+                  required:
+                  - backupPlan
+                  type: object
+                description: BackupPlans is the map of backupPlan name and its object
+                  ref managed by cluster backup plan
+                type: object
+              clusterSnapshotCrons:
+                additionalProperties:
+                  description: ObjectReference contains enough information to let
+                    you inspect or modify the referred object.
+                  properties:
+                    apiVersion:
+                      description: API version of the referent.
+                      type: string
+                    fieldPath:
+                      description: |-
+                        If referring to a piece of an object instead of an entire object, this string
+                        should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                        For example, if the object reference is to a container within a pod, this would take on a value like:
+                        "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                        the event) or if no container name is specified "spec.containers[2]" (container with
+                        index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                        referencing a part of an object.
+                      type: string
+                    kind:
+                      description: |-
+                        Kind of the referent.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                      type: string
+                    name:
+                      description: |-
+                        Name of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                      type: string
+                    resourceVersion:
+                      description: |-
+                        Specific resourceVersion to which this reference is made, if any.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                      type: string
+                    uid:
+                      description: |-
+                        UID of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: object
+              condition:
+                description: Condition is the current condition of a cluster backup
+                  plan.
+                items:
+                  description: ClusterBackupPlanCondition specifies the current condition
+                    of a cluster backup plan resource.
+                  properties:
+                    phase:
+                      description: Phase defines the current phase of the controller.
+                      enum:
+                      - Sync
+                      type: string
+                    reason:
+                      description: A brief message indicating details about why the
+                        component is in this condition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition
+                      enum:
+                      - Available
+                      - InProgress
+                      - Unavailable
+                      - Completed
+                      - Failed
+                      - Error
+                      type: string
+                    timestamp:
+                      description: Timestamp is the time a condition occurred.
+                      format: date-time
+                      type: string
+                  type: object
+                type: array
+              continuousRestoreStatus:
+                additionalProperties:
+                  description: ContinuousRestoreStatus specifies the details of Continuous
+                    Restore operation status of an instance
+                  properties:
+                    consistentSetSummary:
+                      description: ConsistentSetSummary is the summary of ConsistentSets
+                        for a ContinuousRestorePlan
+                      properties:
+                        lastSuccessfulConsistentSet:
+                          description: LastSuccessfulConsistentSet is the reference
+                            to Latest completed ConsistentSet of a ContinuousRestorePlan
+                          properties:
+                            apiVersion:
+                              description: API version of the referent.
+                              type: string
+                            fieldPath:
+                              description: |-
+                                If referring to a piece of an object instead of an entire object, this string
+                                should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                For example, if the object reference is to a container within a pod, this would take on a value like:
+                                "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                the event) or if no container name is specified "spec.containers[2]" (container with
+                                index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                referencing a part of an object.
+                              type: string
+                            kind:
+                              description: |-
+                                Kind of the referent.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                              type: string
+                            name:
+                              description: |-
+                                Name of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            namespace:
+                              description: |-
+                                Namespace of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                              type: string
+                            resourceVersion:
+                              description: |-
+                                Specific resourceVersion to which this reference is made, if any.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                              type: string
+                            uid:
+                              description: |-
+                                UID of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                              type: string
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        lastSuccessfulConsistentSetTimestamp:
+                          description: LastSuccessfulConsistentSetTimestamp is the
+                            completion timestamp of the last successful ConsistentSet
+                            created
+                          format: date-time
+                          type: string
+                        latestConsistentSet:
+                          description: LatestConsistentSet is the reference to Latest
+                            ClusterRestore in any state, of a ClusterBackupPlan
+                          properties:
+                            apiVersion:
+                              description: API version of the referent.
+                              type: string
+                            fieldPath:
+                              description: |-
+                                If referring to a piece of an object instead of an entire object, this string
+                                should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                For example, if the object reference is to a container within a pod, this would take on a value like:
+                                "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                the event) or if no container name is specified "spec.containers[2]" (container with
+                                index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                referencing a part of an object.
+                              type: string
+                            kind:
+                              description: |-
+                                Kind of the referent.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                              type: string
+                            name:
+                              description: |-
+                                Name of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            namespace:
+                              description: |-
+                                Namespace of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                              type: string
+                            resourceVersion:
+                              description: |-
+                                Specific resourceVersion to which this reference is made, if any.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                              type: string
+                            uid:
+                              description: |-
+                                UID of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                              type: string
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        latestConsistentSetCreationTimestamp:
+                          description: LatestConsistentSetCreationTimestamp is the
+                            creation time stamp of the last ConsistentSet created
+                            for this BackupPlan/ClusterBackupPlan
+                          format: date-time
+                          type: string
+                        totalAvailableConsistentSet:
+                          description: TotalAvailableConsistentSet is the count of
+                            total number of Available ConsistentSets
+                          format: int32
+                          type: integer
+                        totalFailedConsistentSet:
+                          description: TotalFailedConsistentSet is the count of total
+                            number of Failed ConsistentSets
+                          format: int32
+                          type: integer
+                        totalInProgressConsistentSet:
+                          description: TotalInProgressConsistentSet is the count of
+                            total number of InProgress ConsistentSets
+                          format: int32
+                          type: integer
+                        totalInUseConsistentSet:
+                          description: TotalInUseConsistentSet is the count of total
+                            number of InUse ConsistentSets
+                          format: int32
+                          type: integer
+                        totalQueuedConsistentSet:
+                          description: TotalQueuedConsistentSet is the count of total
+                            number of Queued ConsistentSets
+                          format: int32
+                          type: integer
+                        totalUnavailableConsistentSet:
+                          description: TotalUnavailableConsistentSet is the count
+                            of total number of Unavailable ConsistentSets
+                          format: int32
+                          type: integer
+                      type: object
+                    continuousRestoreEnabled:
+                      description: ContinuousRestoreEnabled denotes if the Continuous
+                        Restore service is actually enabled on the ContinuousRestore
+                        site
+                      type: boolean
+                    continuousRestorePlan:
+                      description: |-
+                        ContinuousRestorePlan denotes the name of ContinuousRestorePlan created for this BackupPlan/ClusterBackupPlan on
+                        the ContinuousRestore site
+                      type: string
+                    continuousRestoreSiteStatus:
+                      description: |-
+                        ContinuousRestoreSiteStatus is the current Status of ContinuousRestore service Available/Unavailable.
+                        It is updated as per the heartbeat of ContinuousRestore service
+                      enum:
+                      - Available
+                      - Unavailable
+                      type: string
+                    lastConsistentSetCreationTimestamp:
+                      description: LastConsistentSetCreationTimestamp is the creation
+                        time stamp of the last ConsistentSet created for this BackupPlan/ClusterBackupPlan
+                      format: date-time
+                      type: string
+                    lastSuccessfulConsistentSetTimestamp:
+                      description: |-
+                        LastSuccessfulConsistentSetTimestamp is the completion timestamp of the last successful ConsistentSet created
+                        for this BackupPlan/ClusterBackupPlan
+                      format: date-time
+                      type: string
+                    numAvailableConsistentSet:
+                      description: |-
+                        NumAvailableConsistentSet is the number of available ConsistentSets for this BackupPlan/ClusterBackupPlan
+                        on ContinuousRestore site
+
+                        Deprecated: NumAvailableConsistentSet is moved to ConsistentSetSummary
+                      type: integer
+                  required:
+                  - continuousRestoreEnabled
+                  type: object
+                description: ContinuousRestoreStatus contains the information of each
+                  ContinuousRestore instanceID defined, and it's ContinuousRestore
+                  service status
+                type: object
+              fullBackupCrons:
+                additionalProperties:
+                  description: ObjectReference contains enough information to let
+                    you inspect or modify the referred object.
+                  properties:
+                    apiVersion:
+                      description: API version of the referent.
+                      type: string
+                    fieldPath:
+                      description: |-
+                        If referring to a piece of an object instead of an entire object, this string
+                        should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                        For example, if the object reference is to a container within a pod, this would take on a value like:
+                        "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                        the event) or if no container name is specified "spec.containers[2]" (container with
+                        index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                        referencing a part of an object.
+                      type: string
+                    kind:
+                      description: |-
+                        Kind of the referent.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                      type: string
+                    name:
+                      description: |-
+                        Name of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                      type: string
+                    resourceVersion:
+                      description: |-
+                        Specific resourceVersion to which this reference is made, if any.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                      type: string
+                    uid:
+                      description: |-
+                        UID of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: object
+              incrementalCrons:
+                additionalProperties:
+                  description: ObjectReference contains enough information to let
+                    you inspect or modify the referred object.
+                  properties:
+                    apiVersion:
+                      description: API version of the referent.
+                      type: string
+                    fieldPath:
+                      description: |-
+                        If referring to a piece of an object instead of an entire object, this string
+                        should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                        For example, if the object reference is to a container within a pod, this would take on a value like:
+                        "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                        the event) or if no container name is specified "spec.containers[2]" (container with
+                        index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                        referencing a part of an object.
+                      type: string
+                    kind:
+                      description: |-
+                        Kind of the referent.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                      type: string
+                    name:
+                      description: |-
+                        Name of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                      type: string
+                    resourceVersion:
+                      description: |-
+                        Specific resourceVersion to which this reference is made, if any.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                      type: string
+                    uid:
+                      description: |-
+                        UID of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: object
+              isImmutableClusterBackupDisabled:
+                description: IsImmutableClusterBackupDisabled states if the immutable
+                  cluster backup is disabled for the ClusterBackupPlan
+                type: boolean
+              isImmutableClusterSnapshotDisabled:
+                description: IsImmutableClusterSnapshotDisabled states if the immutable
+                  cluster snapshot is disabled for the ClusterBackupPlan
+                type: boolean
+              pauseSchedule:
+                description: PauseSchedule shows whether a cluster backup plan schedule
+                  is Paused and scheduled cluster backups will not be created.
+                type: boolean
+              securityScanStatus:
+                additionalProperties:
+                  description: SecurityScanStatus specifies the details of Security
+                    scan status of an instance
+                  properties:
+                    lastScanTimestamp:
+                      description: LastScanTimestamp is the time stamp of the last
+                        scan performed on this BackupPlan/ClusterBackupPlan
+                      format: date-time
+                      type: string
+                    lastSuccessfulScanScanTimestamp:
+                      description: LastSuccessfulScanScanTimestamp is the time of
+                        the last successful scan performed this BackupPlan/ClusterBackupPlan
+                      format: date-time
+                      type: string
+                    scanPlan:
+                      description: ScanPlan denotes the name of ScanPlan created for
+                        this BackupPlan/ClusterBackupPlan on the Security site
+                      type: string
+                    securityEnabled:
+                      description: SecurityEnabled denotes if the Security service
+                        is actually enabled on the Security site
+                      type: boolean
+                    serviceStatus:
+                      description: |-
+                        ServiceStatus is the current Status of Security service Available/Unavailable. It is updated as per the heartbeat of
+                        Security service
+                      enum:
+                      - Available
+                      - Unavailable
+                      type: string
+                  required:
+                  - securityEnabled
+                  type: object
+                description: SecurityScanStatus contains the information of each Security
+                  instanceID defined, and it's Security Scan status
+                type: object
+              stats:
+                description: ClusterBackupPlanStats defines the stats for a ClusterBackupPlan
+                properties:
+                  clusterBackupSummary:
+                    description: ClusterBackupSummary comprises ClusterBackup object
+                      references and count of ClusterBackups with different statuses
+                    properties:
+                      inProgressClusterBackup:
+                        description: InProgressClusterBackup is the reference to an
+                          InProgress ClusterBackup of a ClusterBackupPlan
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      lastSuccessfulClusterBackup:
+                        description: LastSuccessfulClusterBackup is the reference
+                          to Latest available ClusterBackup of a ClusterBackupPlan
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      latestClusterBackup:
+                        description: LatestClusterBackup is the reference to Latest
+                          ClusterBackup in any state, of a ClusterBackupPlan
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      pvcExistsForBackup:
+                        description: |-
+                          PVCExistsForBackup is a bool value that states if the latest clusterBackup of a clusterBackupPlan has any backup
+                          that has PVCs in its data component
+                        type: boolean
+                      totalAvailableClusterBackups:
+                        description: TotalAvailableClusterBackups is the count of
+                          total number of Available ClusterBackups
+                        format: int32
+                        type: integer
+                      totalCanceledClusterBackups:
+                        description: TotalCanceledClusterBackups is the count of total
+                          number of Canceled Cluster Backups
+                        format: int32
+                        type: integer
+                      totalDegradedClusterBackups:
+                        description: TotalDegradedClusterBackups is the count of total
+                          number of Degraded ClusterBackups.
+                        format: int32
+                        type: integer
+                      totalFailedClusterBackups:
+                        description: TotalFailedClusterBackups is the count of total
+                          number of Failed ClusterBackups.
+                        format: int32
+                        type: integer
+                      totalQueuedClusterBackups:
+                        description: TotalQueuedClusterBackups is the count of total
+                          number of Queued ClusterBackups.
+                        format: int32
+                        type: integer
+                    type: object
+                  clusterRestoreSummary:
+                    description: ClusterRestoreSummary comprises ClusterRestore object
+                      references and count of ClusterRestore with different statuses
+                    properties:
+                      lastSuccessfulClusterRestore:
+                        description: LastSuccessfulClusterRestore is the reference
+                          to Latest completed ClusterRestore of a ClusterBackupPlan
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      latestClusterRestore:
+                        description: LatestClusterRestore is the reference to Latest
+                          ClusterRestore in any state, of a ClusterBackupPlan
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      totalCompletedClusterRestores:
+                        description: TotalCompletedClusterRestores is the count of
+                          total number of Completed ClusterRestores
+                        format: int32
+                        type: integer
+                      totalFailedClusterRestores:
+                        description: TotalFailedClusterRestores is the count of total
+                          number of Failed ClusterRestores
+                        format: int32
+                        type: integer
+                      totalInProgressClusterRestores:
+                        description: TotalInProgressClusterRestores is the count of
+                          total number of InProgress ClusterRestores
+                        format: int32
+                        type: integer
+                    type: object
+                  clusterSnapshotSummary:
+                    description: ClusterSnapshotSummary consist of snapshot object
+                      references and count of snapshot with different statuses
+                    properties:
+                      inProgressClusterSnapshot:
+                        description: InProgressClusterSnapshot is the reference to
+                          an InProgress ClusterSnapshot of a ClusterBackupPlan
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      lastSuccessfulClusterSnapshot:
+                        description: LastSuccessfulClusterSnapshot is the reference
+                          to Latest available ClusterSnapshot of a ClusterBackupPlan
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      latestClusterSnapshot:
+                        description: LatestClusterSnapshot is the reference to Latest
+                          ClusterSnapshot in any state, of a ClusterBackupPlan
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: |-
+                              If referring to a piece of an object instead of an entire object, this string
+                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                              the event) or if no container name is specified "spec.containers[2]" (container with
+                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                              referencing a part of an object.
+                            type: string
+                          kind:
+                            description: |-
+                              Kind of the referent.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          namespace:
+                            description: |-
+                              Namespace of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            type: string
+                          resourceVersion:
+                            description: |-
+                              Specific resourceVersion to which this reference is made, if any.
+                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                            type: string
+                          uid:
+                            description: |-
+                              UID of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                            type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      pvcExistsForSnapshot:
+                        description: |-
+                          PVCExistsForSnapshot is a bool value that states if the latest cluster backup of a cluster backup plan has PVCs in
+                          its backups data component
+                        type: boolean
+                      totalAvailableClusterSnapshots:
+                        description: TotalAvailableClusterSnapshots is the count of
+                          total number of Available ClusterSnapshots
+                        format: int32
+                        type: integer
+                      totalFailedClusterSnapshots:
+                        description: TotalFailedClusterSnapshots is the count of total
+                          number of Failed ClusterSnapshots
+                        format: int32
+                        type: integer
+                      totalQueuedClusterSnapshots:
+                        description: TotalQueuedClusterSnapshots is the count of total
+                          number of Queued ClusterSnapshots
+                        format: int32
+                        type: integer
+                    type: object
+                  immutable:
+                    description: Immutable specify whether a backup data is going
+                      to be immutable
+                    type: boolean
+                type: object
+              status:
+                description: |-
+                  Status defines the current state of the ClusterBackupPlan resource. `Available` state ClusterBackupPlan only
+                  can be used for ClusterBackup
+                enum:
+                - Available
+                - InProgress
+                - Unavailable
+                - Error
+                type: string
+            required:
+            - status
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

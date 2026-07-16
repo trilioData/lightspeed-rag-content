@@ -1,0 +1,18 @@
+id: policy-retention-keep-7-backups
+category: scheduling
+validation_mode: yaml_baseline
+prompt: Create a Retention Policy named 'keep-7' that retains the last 7 backups
+expected_citations:
+- tvk-content/CRDs/policy-crd.md
+yaml_validation:
+- expected_kind: Policy
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.name: keep-7
+    spec.type: Retention
+    spec.retentionConfig.latest: 7
+tags:
+- cr-creation
+- yaml-generation
+- policy
+- retention

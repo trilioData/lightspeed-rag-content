@@ -1,0 +1,17 @@
+id: backup-type-field-values
+category: backup
+validation_mode: rubric
+prompt: What are the valid values for the Backup type field?
+expected_facts:
+- 'spec.type accepts two values: Full or Incremental'
+- Full captures all application data and metadata
+- Incremental captures only the delta (changes since the previous backup) plus YAML
+- The first backup of an application is always Full, even if spec.type is Incremental
+- Incremental backups depend on the preceding Full and all intermediate incrementals in the chain
+- There is no 'Mixed' value for spec.type
+expected_citations:
+- tvk-content/CRDs/backup-crd.md
+tags:
+- cr-api
+- backup-type
+- fields

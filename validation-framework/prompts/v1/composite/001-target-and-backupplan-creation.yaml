@@ -1,0 +1,28 @@
+id: composite-target-and-backupplan-creation
+category: composite
+validation_mode: yaml_baseline
+prompt: How do I create a Target and then create a BackupPlan that uses it? Walk me through the steps.
+expected_citations:
+- tvk-content/CRDs/target-crd.md
+- tvk-content/CRDs/backupplan-crd.md
+yaml_validation:
+- expected_kind: Secret
+  expected_api_version: v1
+  expected_parameters:
+    type: Opaque
+- expected_kind: Target
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.type: '*'
+    spec.vendor: '*'
+- expected_kind: BackupPlan
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.backupConfig.target.name: '*'
+    spec.backupConfig.target.namespace: '*'
+tags:
+- cr-creation
+- workflow
+- target
+- backupplan
+- step-by-step

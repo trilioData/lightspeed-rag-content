@@ -1,0 +1,19 @@
+id: hook-pre-post-fields
+category: hook
+validation_mode: rubric
+prompt: What fields are available for pre and post hooks in tvk?
+expected_facts:
+- The CRD kind is Hook with apiVersion triliovault.trilio.io/v1
+- Pre-backup actions are defined under spec.pre and post-backup actions under spec.post
+- spec.pre.execAction.command and spec.post.execAction.command each take a list of strings (the command to execute in the container)
+- spec.pre.ignoreFailure (bool) and spec.post.ignoreFailure (bool) control whether the backup continues if the hook fails
+- spec.pre.maxRetryCount (int) and spec.post.maxRetryCount (int) set how many times the hook command is retried
+- spec.pre.timeoutSeconds (int) and spec.post.timeoutSeconds (int) define the timeout for the hook command
+- A Hook must be created in the same namespace as the BackupPlan referencing it
+- A BackupPlan references a Hook via spec.hookConfig.hooks[].hook.name with spec.hookConfig.mode (e.g. Sequential), plus podSelector and containerRegex to choose target pods/containers
+expected_citations:
+- tvk-content/CRDs/hook-crd.md
+tags:
+- cr-api
+- hook
+- fields

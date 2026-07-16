@@ -1,0 +1,27 @@
+id: composite-incremental-backup-strategy
+category: composite
+validation_mode: yaml_baseline
+prompt: How do I set up a backup strategy with weekly full backups and daily incremental backups? What policies and BackupPlan configuration do I need?
+expected_citations:
+- tvk-content/CRDs/backupplan-crd.md
+- tvk-content/CRDs/policy-crd.md
+- tvk-content/CRDs/backup-crd.md
+yaml_validation:
+- expected_kind: BackupPlan
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.backupConfig.target.name: '*'
+    spec.backupConfig.schedulePolicy.fullBackupCron.schedule: '*'
+    spec.backupConfig.schedulePolicy.incrementalCron.schedule: '*'
+- expected_kind: Backup
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    spec.type: Incremental
+    spec.backupPlan.name: '*'
+tags:
+- cr-creation
+- workflow
+- backup-strategy
+- incremental
+- schedule
+- policy

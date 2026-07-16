@@ -1,0 +1,22 @@
+id: hook-yaml-mysql-example
+category: hook
+validation_mode: yaml_baseline
+prompt: Generate a YAML for a tvk Hook named 'mysql-hooks' with pre-hook to flush tables with read lock and post-hook to unlock tables, both with 30 second timeout and 3 retries.
+expected_citations:
+- tvk-content/CRDs/hook-crd.md
+yaml_validation:
+- expected_kind: Hook
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.name: mysql-hooks
+    spec.pre.execAction.command: '*'
+    spec.pre.timeoutSeconds: 30
+    spec.pre.maxRetryCount: 3
+    spec.post.execAction.command: '*'
+    spec.post.timeoutSeconds: 30
+    spec.post.maxRetryCount: 3
+tags:
+- cr-creation
+- hook
+- yaml
+- mysql

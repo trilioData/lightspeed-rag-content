@@ -1,0 +1,17 @@
+id: backupplan-target-reference
+category: backupplan
+validation_mode: rubric
+prompt: How do I reference a Target in a BackupPlan?
+expected_facts:
+- Use spec.backupConfig.target.name for the Target CR name
+- Use spec.backupConfig.target.namespace for the Target's namespace
+- The Target reference is a standard ObjectReference (name + namespace)
+- The Target may live in a different namespace than the BackupPlan (e.g. a central trilio-system namespace)
+- Once a Target is chosen for a BackupPlan it cannot be changed later
+expected_citations:
+- tvk-content/CRDs/backupplan-crd.md
+- tvk-content/CRDs/target-crd.md
+tags:
+- cr-references
+- target
+- cross-namespace

@@ -1,0 +1,26 @@
+id: target-s3-yaml
+category: target
+validation_mode: yaml_baseline
+prompt: Show me YAML to create an S3 Target named 'backup-target' with bucket 'my-backups' in region us-east-1.
+expected_citations:
+- tvk-content/CRDs/target-crd.md
+yaml_validation:
+- expected_kind: Target
+  expected_api_version: triliovault.trilio.io/v1
+  expected_parameters:
+    metadata.name: backup-target
+    spec.type: ObjectStore
+    spec.vendor: AWS
+    spec.objectStoreCredentials.bucketName: my-backups
+    spec.objectStoreCredentials.region: us-east-1
+    spec.objectStoreCredentials.credentialSecret.name: '*'
+- expected_kind: Secret
+  expected_api_version: v1
+  expected_parameters:
+    type: Opaque
+    stringData.accessKey: '*'
+    stringData.secretKey: '*'
+tags:
+- cr-creation
+- yaml-generation
+- s3
