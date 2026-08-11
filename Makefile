@@ -55,7 +55,6 @@ update-model: ## Update the local copy of the embedding model
 PULL_BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
 REGISTRY ?= $(shell case "$(PULL_BASE_REF)" in \
 	(release*) echo "quay.io/triliodata" ;; \
-	(feature*) echo "quay.io/triliovault" ;; \
 	(*) echo "eu.gcr.io/amazing-chalice-243510" ;; \
 	esac)
 IMAGE_NAME ?= tvk-lightspeed-rag-content
@@ -70,14 +69,21 @@ IMAGE_TAG ?= $(shell git rev-parse --abbrev-ref HEAD | grep $(shell git describe
 
 ifeq (,$(IMAGE_TAG))
 ifeq ($(JOB_TYPE),presubmit)
-IMAGE_TAG=$(PULL_PULL_SHA)
-else ifeq ($(JOB_TYPE),postsubmit)
-IMAGE_TAG=$(PULL_BASE_REF)
+IMAGE_TAG=${PULL_PULL_SHA}
 else
-IMAGE_TAG=$(shell git rev-parse --abbrev-ref HEAD)
+IMAGE_TAG=$(shell git rev-parse --abbrev-ref HEAD )
 endif
 endif
+
+# Identify the internal release with the alpha/beta/rc tags
+ISRC ?= $(shell git describe --tags --match=$(IMAGE_TAG) --exclude=*-alpha* --exclude=*-beta* --abbrev=0 2> /dev/null)
+
+ifeq ($(ISRC),$(IMAGE_TAG))
+ REGISTRY=quay.io/triliovault
+endif
+
 IMAGE := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+
 
 build-image: ## Build a linux/amd64 rag-content image tagged $(IMAGE).
 	podman build --platform=linux/amd64 -t $(IMAGE) .
