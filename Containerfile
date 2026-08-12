@@ -58,8 +58,8 @@ COPY LICENSE /licenses/
 LABEL name="tvk-lightspeed-rag-content"
 LABEL maintainer=Trilio\ Data\ Inc.
 LABEL vendor=Trilio\ Data\ Inc.
-LABEL version=VERSION
-LABEL release=RELEASE
+LABEL version=5.4.0-rc.6
+LABEL release=RC
 LABEL summary="OpenShift Lightspeed RAG content for TVK"
 LABEL description="TrilioVault RAG content for OpenShift Lightspeed"
 
