@@ -23,6 +23,10 @@ The Restore CR triggers recovery of an application from a Backup, Snapshot, Loca
 | `spec.restoreFlags.onlyData` / `onlyMetadata` | bool | Restore only data or only metadata | No |
 | `spec.restoreFlags.restoreStorageClass` | bool | Restore storage class | No |
 | `spec.restoreFlags.retainHelmReleaseName` | bool | Retain original Helm release name | No |
+| `spec.restoreFlags.disableIgnoreResources` | bool | Restore resources that are ignored by default | No |
+| `spec.restoreFlags.overrideImageIfExist` | bool | Overwrite an existing image in the registry with the backed-up image of the same name | No |
+| `spec.restoreFlags.restoreVMMACAddress` | bool | Assign the backed-up VM's original MAC address to the restored VM. Mutually exclusive with a VM MAC address transform | No |
+| `spec.restoreFlags.restoreNamespaceLabelsAnnotations` | string | Strategy for restoring the backed-up namespace's labels/annotations: `Override`, `Append`, or `Replace` | No |
 | `spec.actionFlags.protectRestoredApp` | bool | Re-apply TVK protection after restore | No |
 | `spec.actionFlags.cleanupOnFailure` | bool | Clean up restored resources if restore fails | No |
 | `spec.actionFlags.imageRestore` | bool | Restore container images | No |
@@ -33,7 +37,21 @@ The Restore CR triggers recovery of an application from a Backup, Snapshot, Loca
 | `spec.encryption.encryptionSecret` | ObjectReference | Decryption key reference for encrypted backups | No |
 | `spec.resourcesReadyWaitSeconds` | uint16 | Wait time for pods to become ready (0-1200) | No |
 | `spec.cleanupConfig.enabled` | bool | Enable cleanup-on-restore workflow | Yes (when `cleanupConfig` is set) |
+| `spec.cleanupConfig.gracefulDeletionTimeoutSeconds` | int32 | Timeout for graceful resource cleanup (60-1800) | No |
 | `spec.imageRegistry` | object | Override container image registry | No |
+
+## Restore Flags Constraints
+
+The webhook rejects the CR if any of these mutually exclusive combinations are set together:
+
+| Cannot be enabled together | Notes |
+|-----------------------------|-------|
+| `restoreFlags.skipIfAlreadyExists` + `restoreFlags.patchIfAlreadyExists` | Only one flag can be set at a time |
+| `restoreFlags.patchCRD` + `restoreFlags.skipOperatorResources` | Only one flag can be set at a time |
+| `restoreFlags.onlyData` + `restoreFlags.onlyMetadata` | Only one flag can be set at a time |
+| `cleanupConfig.enabled: true` + `excludeResourceSelector` (or deprecated `excludeResources`) | Cleanup and resource exclusion are mutually exclusive |
+
+`restoreFlags.restoreNamespaceLabelsAnnotations` is a single string field (not a set of booleans), so it only ever holds one of `Override`, `Append`, or `Replace` at a time — there's no combination to avoid, just pick one value.
 
 ## Status Fields
 

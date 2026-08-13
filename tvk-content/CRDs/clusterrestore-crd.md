@@ -8,14 +8,20 @@ The ClusterRestore CR triggers a multi-namespace restore from a ClusterBackup, C
 
 | Capability | Global (`spec.globalConfig`) | Namespace (`spec.components[].restoreConfig` / `hookConfig`) |
 |------------|------------------------------|---------------------------------------------------------------|
-| Restore flags | Yes | Yes (overrides global) |
-| Include (`resourceSelector`) | Yes | Yes |
-| Exclude (`excludeResourceSelector`) | Yes | Yes |
-| Transformation (`transformComponents`) | Yes | Yes |
+| Restore flags (`restoreFlags`) | Yes | Yes — see override behavior below |
+| Include (`resourceSelector`) | Yes | Yes (falls back to global per-field) |
+| Exclude (`excludeResourceSelector`) | Yes | Yes (falls back to global per-field) |
+| Transformation (`transformComponents`) | Yes | Yes (replaces global entirely if the component sets `restoreConfig`) |
+| Resources-ready wait (`resourcesReadyWaitSeconds`) | Yes | Yes (replaces global entirely if the component sets `restoreConfig`) |
+| Cleanup on restore (`cleanupConfig`) | Yes | Yes (falls back to global per-field) |
 | Hooks (`hookConfig`) | No | Yes (`components[].hookConfig`) |
 | Encryption | Top-level `spec.encryption` | — |
+| Action flags (`actionFlags`) | Top-level `spec.actionFlags` | — |
+| Image registry (`imageRegistry`) | Top-level `spec.imageRegistry` | — |
 
 Use `sourceNamespace` (preferred) or deprecated `backupNamespace` for the source namespace from the backup, and `restoreNamespace` for the destination. Include/exclude use `ResourceSelector` with `gvkSelector` / `labelSelector` — not flat `apiGroup`/`kind`/`name` lists.
+
+**Override behavior for `restoreFlags`:** if a component defines its own `restoreConfig`, most boolean flags (`skipIfAlreadyExists`, `patchIfAlreadyExists`, `patchCRD`, `useOCPNamespaceUIDRange`, `omitMetadata`, `skipOperatorResources`, `disableIgnoreResources`, `onlyData`, `onlyMetadata`, `overrideImageIfExist`) are taken **entirely** from that component — the global values are not inherited for the rest of those flags. However, `restoreStorageClass`, `retainHelmReleaseName`, `restoreVMMACAddress`, and `restoreNamespaceLabelsAnnotations` fall back to the global value individually when not set at the component level.
 
 ## Key Fields
 
@@ -29,20 +35,38 @@ Use `sourceNamespace` (preferred) or deprecated `backupNamespace` for the source
 | `spec.source.continuousRestorePlan` | ObjectReference | Name of the ContinuousRestorePlan | Conditional |
 | `spec.source.target` / `spec.source.location` | ObjectReference / string | Target and location when `type` is `Location` | Conditional |
 | `spec.globalConfig` | RestoreConfig | Global restore config (flags, selectors, transforms) for all components | No |
-| `spec.globalConfig.restoreFlags` | object | Global restore flags | No |
+| `spec.globalConfig.restoreFlags` | object | Global restore flags — see `spec.restoreFlags.*` in the [Restore CRD](restore-crd.md) for the full list of flags (`skipIfAlreadyExists`, `patchIfAlreadyExists`, `patchCRD`, `useOCPNamespaceUIDRange`, `omitMetadata`, `skipOperatorResources`, `disableIgnoreResources`, `onlyData`, `onlyMetadata`, `overrideImageIfExist`, `restoreStorageClass`, `retainHelmReleaseName`, `restoreVMMACAddress`, `restoreNamespaceLabelsAnnotations`) | No |
 | `spec.globalConfig.resourceSelector` | ResourceSelector | Global include | No |
 | `spec.globalConfig.excludeResourceSelector` | ResourceSelector | Global exclude | No |
 | `spec.globalConfig.transformComponents` | object | Global transform (custom/helm) | No |
+| `spec.globalConfig.resourcesReadyWaitSeconds` | uint16 | Global wait time for pods to become ready (0-1200) | No |
+| `spec.globalConfig.cleanupConfig.enabled` | bool | Enable cleanup-on-restore workflow globally | No |
+| `spec.globalConfig.cleanupConfig.gracefulDeletionTimeoutSeconds` | int32 | Timeout for graceful resource cleanup (60-1800) | No |
 | `spec.components` | []ComponentConfig | Per-namespace restore configuration | No |
 | `spec.components[].sourceNamespace` | string | Preferred source namespace from the backup | No |
 | `spec.components[].backupNamespace` | string | Deprecated; use `sourceNamespace` | No |
 | `spec.components[].restoreNamespace` | string | Target namespace for the restore | No |
-| `spec.components[].restoreConfig` | RestoreConfig | Per-namespace `restoreFlags` / `resourceSelector` / `excludeResourceSelector` / `transformComponents` | No |
+| `spec.components[].restoreConfig` | RestoreConfig | Per-namespace `restoreFlags` / `resourceSelector` / `excludeResourceSelector` / `transformComponents` / `resourcesReadyWaitSeconds` / `cleanupConfig` | No |
 | `spec.components[].hookConfig` | object | Per-namespace post-restore hooks via `mode` / `hooks` / `podReadyWaitSeconds` | No |
 | `spec.excludeComponents` | []string | Namespaces to exclude from restore | No |
 | `spec.actionFlags.cleanupOnFailure` | bool | Clean up resources if restore fails | No |
+| `spec.actionFlags.protectRestoredApp` | bool | Re-apply TVK protection after restore | No |
+| `spec.actionFlags.imageRestore` | bool | Restore container images | No |
 | `spec.encryption.encryptionSecret` | ObjectReference | Decryption key for encrypted backups | No |
 | `spec.imageRegistry` | object | Override container image registry | No |
+
+## Restore Flags Constraints
+
+These constraints are validated **independently at both levels** — once against `spec.globalConfig` and once against each `spec.components[].restoreConfig` — so a component can violate a rule even if the global config doesn't (and vice versa):
+
+| Cannot be enabled together | Notes |
+|-----------------------------|-------|
+| `restoreFlags.skipIfAlreadyExists` + `restoreFlags.patchIfAlreadyExists` | Only one flag can be set at a time |
+| `restoreFlags.patchCRD` + `restoreFlags.skipOperatorResources` | Only one flag can be set at a time |
+| `restoreFlags.onlyData` + `restoreFlags.onlyMetadata` | Only one flag can be set at a time |
+| `cleanupConfig.enabled: true` + `excludeResourceSelector` (or deprecated `excludeResources`) | Cleanup and resource exclusion are mutually exclusive, checked separately for `globalConfig` and for each component's `restoreConfig` |
+
+`restoreFlags.restoreNamespaceLabelsAnnotations` is a single string field, so it only ever holds one of `Override`, `Append`, or `Replace` at a time.
 
 ## Status Fields
 
@@ -237,6 +261,44 @@ spec:
                 kind: VirtualMachine
     - sourceNamespace: cas-bckp4
       restoreNamespace: cas-bckp-res-4
+```
+
+### Global restore flags overridden per namespace, with cleanup config and action flags
+
+`globalConfig.restoreFlags.restoreVMMACAddress` and `restoreNamespaceLabelsAnnotations` apply to every component unless a component sets its own value (per-flag fallback to global). `cleanupConfig` also falls back to global per-field. `actionFlags` (`cleanupOnFailure`, `protectRestoredApp`, `imageRestore`) is top-level only and cannot be set per namespace.
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: ClusterRestore
+metadata:
+  name: multi-ns-restore-flags
+spec:
+  source:
+    type: ClusterBackup
+    clusterBackup:
+      name: multi-ns-backup
+  globalConfig:
+    restoreFlags:
+      skipIfAlreadyExists: true
+      restoreVMMACAddress: true
+      restoreNamespaceLabelsAnnotations: Override
+    cleanupConfig:
+      enabled: true
+      gracefulDeletionTimeoutSeconds: 120
+  components:
+    - sourceNamespace: vm-bckp3
+      restoreNamespace: vm-bckp-res-3
+      # Inherits restoreVMMACAddress/restoreNamespaceLabelsAnnotations/cleanupConfig from globalConfig
+    - sourceNamespace: vm-bckp4
+      restoreNamespace: vm-bckp-res-4
+      restoreConfig:
+        restoreFlags:
+          restoreVMMACAddress: false
+        cleanupConfig:
+          enabled: false
+  actionFlags:
+    cleanupOnFailure: true
+    protectRestoredApp: true
 ```
 
 ### Example: map four namespaces with per-namespace include/exclude
