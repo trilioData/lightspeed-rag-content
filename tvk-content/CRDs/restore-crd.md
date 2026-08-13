@@ -26,11 +26,11 @@ The Restore CR triggers recovery of an application from a Backup, Snapshot, Loca
 | `spec.actionFlags.protectRestoredApp` | bool | Re-apply TVK protection after restore | No |
 | `spec.actionFlags.cleanupOnFailure` | bool | Clean up restored resources if restore fails | No |
 | `spec.actionFlags.imageRestore` | bool | Restore container images | No |
-| `spec.excludeResourceSelector` | ResourceSelector | Resources to exclude from restore | No |
-| `spec.resourceSelector` | ResourceSelector | Specific resources to restore | No |
-| `spec.transformComponents` | object | Transform custom/helm components during restore | No |
-| `spec.hookConfig` | object | Post-restore hook configuration | No |
-| `spec.encryption` | object | Decryption key for encrypted backups | No |
+| `spec.resourceSelector` | ResourceSelector | Resources to include (`gvkSelector` / `labelSelector`) | No |
+| `spec.excludeResourceSelector` | ResourceSelector | Resources to exclude (`gvkSelector` / `labelSelector`) | No |
+| `spec.transformComponents` | object | Transform components during restore via `helm` / `custom` | No |
+| `spec.hookConfig` | object | Post-restore hook config via `mode` / `hooks` / `podReadyWaitSeconds` | No |
+| `spec.encryption.encryptionSecret` | ObjectReference | Decryption key reference for encrypted backups | No |
 | `spec.resourcesReadyWaitSeconds` | uint16 | Wait time for pods to become ready (0-1200) | No |
 | `spec.cleanupConfig.enabled` | bool | Enable cleanup-on-restore workflow | Yes (when `cleanupConfig` is set) |
 | `spec.imageRegistry` | object | Override container image registry | No |
@@ -45,7 +45,31 @@ The Restore CR triggers recovery of an application from a Backup, Snapshot, Loca
 | `status.size` | Quantity | Total restored data size |
 | `status.duration` | Duration | Total restore duration |
 
-## Example
+## Encryption Secret Format
+
+The Secret data key must be `encryptKey` (same key used at backup time).
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: encryption-secret
+  namespace: my-app
+type: Opaque
+stringData:
+  encryptKey: <encryption-key-value>
+```
+
+```bash
+openssl rand -base64 32 > enc_key
+kubectl create secret generic encryption-secret \
+  --from-file=encryptKey=enc_key \
+  -n my-app
+```
+
+## Examples
+
+### Basic restore from Backup
 
 ```yaml
 apiVersion: triliovault.trilio.io/v1
@@ -68,9 +92,138 @@ spec:
     cleanupOnFailure: true
 ```
 
+### Restore with encryption
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: Restore
+metadata:
+  name: encrypted-restore
+  namespace: my-app
+spec:
+  source:
+    type: Backup
+    backup:
+      name: my-app-backup
+  encryption:
+    encryptionSecret:
+      name: encryption-secret
+      namespace: my-app
+  restoreFlags:
+    skipIfAlreadyExists: true
+```
+
+### Restore with include and exclude
+
+Use `resourceSelector` to include and `excludeResourceSelector` to exclude. Selection is by GVK (optional object names) and/or labels. If both are set, include is applied first, then exclude. Not applicable for Helm-based backups.
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: Restore
+metadata:
+  name: selective-restore
+  namespace: my-app
+spec:
+  source:
+    type: Backup
+    backup:
+      name: my-app-backup
+  resourceSelector:
+    gvkSelector:
+      - groupVersionKind:
+          group: ""
+          version: v1
+          kind: Service
+        objects:
+          - nginx-service
+          - web-service
+    labelSelector:
+      - matchLabels:
+          env: stage
+  excludeResourceSelector:
+    gvkSelector:
+      - groupVersionKind:
+          group: ""
+          version: v1
+          kind: PersistentVolumeClaim
+        objects:
+          - sample-pvc
+  restoreFlags:
+    skipIfAlreadyExists: true
+```
+
+### Restore with transformation
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: Restore
+metadata:
+  name: transformed-restore
+  namespace: my-app-dr
+spec:
+  source:
+    type: Backup
+    backup:
+      name: my-app-backup
+  transformComponents:
+    helm:
+      - transformName: t1
+        release: mysql
+        set:
+          - key: persistence.storageClass
+            value: abc
+    custom:
+      - transformName: t3
+        resources:
+          groupVersionKind:
+            group: ""
+            version: v1
+            kind: PersistentVolumeClaim
+          objects:
+            - PVC1
+            - PVC2
+        jsonPatches:
+          - op: replace
+            path: /spec/storageClassName
+            value: abc
+  restoreFlags:
+    skipIfAlreadyExists: true
+```
+
+### Restore with hooks
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: Restore
+metadata:
+  name: hooked-restore
+  namespace: my-app
+spec:
+  source:
+    type: Backup
+    backup:
+      name: my-app-backup
+  hookConfig:
+    mode: Parallel
+    podReadyWaitSeconds: 120
+    hooks:
+      - hook:
+          name: sample-hook
+          namespace: my-app
+        podSelector:
+          regex: nginx*
+      - hook:
+          name: web-hook
+          namespace: my-app
+        podSelector:
+          regex: web*
+        containerRegex: webserver*
+```
+
 ## Related Resources
 
 - [Backup CRD](backup-crd.md)
 - [Snapshot CRD](snapshot-crd.md)
+- [BackupPlan CRD](backupplan-crd.md)
 - [ClusterRestore CRD](clusterrestore-crd.md)
 - [Troubleshooting](../operators/triliovault-for-kubernetes/troubleshooting.md)

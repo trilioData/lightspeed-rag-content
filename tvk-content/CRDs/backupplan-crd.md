@@ -17,17 +17,17 @@ The BackupPlan defines what to back up and how, including the target storage, re
 | `spec.snapshotConfig.retentionPolicy` | ObjectReference | Retention policy for snapshots | No |
 | `spec.snapshotConfig.schedulePolicy.snapshotPolicy` | ObjectReference | Schedule Policy for snapshots | No |
 | `spec.backupPlanComponents.helmReleases` | []string | Helm release names to back up | No |
-| `spec.backupPlanComponents.operators` | []object | Operator-managed applications to back up | No |
+| `spec.backupPlanComponents.operators` | []object | Operator-managed applications via `customResources`, `operatorId`, `subscription`, `applicationResources` | No |
 | `spec.backupPlanComponents.customSelector` | object | Custom resource selectors (`selectResources` / `excludeResources`) | No |
-| `spec.hookConfig` | object | Pre/post backup hook references (`hooks` required when set) | No |
-| `spec.includeResources` | ResourceSelector | Resources to include (namespace-scope) | No |
-| `spec.excludeResources` | ResourceSelector | Resources to exclude | No |
+| `spec.hookConfig` | object | Pre/post backup hook references via `mode` / `hooks` (`hooks` required when set) | No |
+| `spec.includeResources` | ResourceSelector | Resources to include (namespace-scope) via `gvkSelector` / `labelSelector` | No |
+| `spec.excludeResources` | ResourceSelector | Resources to exclude via `gvkSelector` / `labelSelector` | No |
 | `spec.encryption.encryptionSecret` | ObjectReference | Encryption key reference for encrypted backups | Yes (when `encryption` is set) |
 | `spec.backupPlanFlags.skipImageBackup` | bool | Skip container image backup | No |
 | `spec.backupPlanFlags.pauseSchedule` | bool | Pause scheduled backups | No |
 | `spec.backupPlanFlags.retainHelmApps` | bool | Retain Helm app metadata | No |
-| `spec.securityScanConfig` | object | Security scan instance configuration | No |
-| `spec.continuousRestoreConfig` | object | Continuous restore instance configuration | No |
+| `spec.retainHelmApps` | bool | Deprecated top-level flag; use `backupPlanFlags.retainHelmApps` instead | No |
+| `spec.continuousRestoreConfig.continuousRestoreInstances` | []object | Continuous restore instances via `instanceID`, `continuousRestorePolicy` | No |
 
 ## Status Fields
 
@@ -39,7 +39,33 @@ The BackupPlan defines what to back up and how, including the target storage, re
 | `status.pauseSchedule` | bool | Whether scheduled backups are paused |
 | `status.condition` | []Condition | Sync and validation conditions |
 
-## Example
+## Encryption Secret Format
+
+The encryption Secret data key must be `encryptKey`. Use the same Secret (or identical key value) when restoring encrypted backups.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: encryption-secret
+  namespace: my-app
+type: Opaque
+stringData:
+  encryptKey: <encryption-key-value>
+```
+
+```bash
+openssl rand -base64 32 > enc_key
+kubectl create secret generic encryption-secret \
+  --from-file=encryptKey=enc_key \
+  -n my-app
+```
+
+## Examples
+
+### Namespace BackupPlan with encryption and includeResources
+
+For a namespace-scoped plan, leave `backupPlanComponents` empty and use `includeResources` / `excludeResources` to select what to protect. Prefer `backupPlanFlags.retainHelmApps` over the deprecated top-level `retainHelmApps`.
 
 ```yaml
 apiVersion: triliovault.trilio.io/v1
@@ -53,24 +79,213 @@ spec:
       name: s3-target
       namespace: trilio-system
     retentionPolicy:
-      name: weekly-retention
+      name: retention-policy
       namespace: trilio-system
     schedulePolicy:
       fullBackupPolicy:
-        name: daily-schedule
+        name: full-schedule-policy
         namespace: trilio-system
+      incrementalBackupPolicy:
+        name: incremental-policy
+        namespace: trilio-system
+    maxIncrBackupsPerFullBackup: 5
+  snapshotConfig:
+    target:
+      name: s3-target
+      namespace: trilio-system
+    retentionPolicy:
+      name: latest
+      namespace: trilio-system
+    schedulePolicy:
+      snapshotPolicy:
+        name: full-schedule-policy
+        namespace: trilio-system
+  backupPlanComponents: {}
+  backupPlanFlags:
+    retainHelmApps: true
+    skipImageBackup: true
+    pauseSchedule: false
+  encryption:
+    encryptionSecret:
+      name: encryption-secret
+      namespace: my-app
+  includeResources:
+    gvkSelector:
+      - groupVersionKind:
+          group: apps
+          version: v1
+          kind: Deployment
+        objects:
+          - cass-operator
+      - groupVersionKind:
+          version: v1
+          kind: PersistentVolumeClaim
+        objects:
+          - server-data-development
+```
+
+### BackupPlan with exclude resources
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: BackupPlan
+metadata:
+  name: selective-backupplan
+  namespace: my-app
+spec:
+  backupConfig:
+    target:
+      name: s3-target
+      namespace: my-app
+  backupPlanComponents: {}
+  includeResources:
+    gvkSelector:
+      - groupVersionKind:
+          group: apps
+          version: v1
+          kind: Deployment
+        objects:
+          - frontend
+          - backend
+    labelSelector:
+      - matchLabels:
+          app: my-app
+  excludeResources:
+    gvkSelector:
+      - groupVersionKind:
+          version: v1
+          kind: Secret
+        objects:
+          - temp-credentials
+    labelSelector:
+      - matchLabels:
+          trilio.io/exclude: "true"
+```
+
+### App-scoped BackupPlan (Helm)
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: BackupPlan
+metadata:
+  name: helm-backupplan
+  namespace: my-app
+spec:
+  backupConfig:
+    target:
+      name: s3-target
+      namespace: my-app
   backupPlanComponents:
     helmReleases:
       - my-release
   encryption:
     encryptionSecret:
-      name: backup-encryption-key
+      name: encryption-secret
       namespace: my-app
+```
+
+### BackupPlan with hooks
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: BackupPlan
+metadata:
+  name: hooked-backupplan
+  namespace: my-app
+spec:
+  backupConfig:
+    target:
+      name: s3-target
+      namespace: trilio-system
+  backupPlanComponents:
+    customSelector:
+      selectResources:
+        labelSelector:
+          - matchLabels:
+              app: my-app
+  hookConfig:
+    mode: Sequential
+    hooks:
+      - hook:
+          name: quiesce-hook
+          namespace: my-app
+        podSelector:
+          labels:
+            - matchLabels:
+                app: my-app
+          regex: my-app*
+        containerRegex: app*
+```
+
+### Operator BackupPlan
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: BackupPlan
+metadata:
+  name: test
+  namespace: cass-operator
+spec:
+  encryption:
+    encryptionSecret:
+      name: sample-secret
+      namespace: trilio-system
+  backupConfig:
+    target:
+      name: s3-target
+      namespace: trilio-system
+  snapshotConfig:
+    target:
+      name: s3-target
+      namespace: trilio-system
+  backupPlanComponents:
+    operators:
+      - customResources:
+          - groupVersionKind:
+              group: cassandra.datastax.com
+              version: v1beta1
+              kind: CassandraDatacenter
+        operatorId: cassandra-operator
+        subscription:
+          name: "cass-operator"
+          namespace: "openshift-operators"
+        applicationResources:
+          gvkSelector:
+            - groupVersionKind:
+                version: v1
+                kind: Secret
+              objects:
+                - cass-operator-dockercfg-kfsmq
+  backupPlanFlags: {}
+```
+
+### BackupPlan with security scan and continuous restore config
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: BackupPlan
+metadata:
+  name: scanned-backupplan
+  namespace: my-app
+spec:
+  backupConfig:
+    target:
+      name: s3-target
+      namespace: trilio-system
+  backupPlanComponents: {}
+  continuousRestoreConfig:
+    continuousRestoreInstances:
+      - instanceID: continuous-restore-service-1
+        continuousRestorePolicy:
+          name: continuous-restore-policy
+          namespace: trilio-system
 ```
 
 ## Related Resources
 
 - [Backup CRD](backup-crd.md)
+- [Restore CRD](restore-crd.md)
+- [ClusterBackupPlan CRD](clusterbackupplan-crd.md)
 - [Target CRD](target-crd.md)
 - [Policy CRD](policy-crd.md)
 - [Hook CRD](hook-crd.md)
