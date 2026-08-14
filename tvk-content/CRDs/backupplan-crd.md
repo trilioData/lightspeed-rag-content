@@ -261,7 +261,7 @@ spec:
 
 ### Operator BackupPlan with backup/incremental/snapshot schedule and retention policies (Cassandra)
 
-Schedule cadence (e.g. "full backup every 6 hours", "incremental every 3 hours", "snapshot daily at 2 PM") and retention counts (e.g. "retain latest 5 backups") are configured as separate `Policy` CRs — see [Policy CRD](policy-crd.md) — and referenced here by name/namespace under `backupConfig` / `snapshotConfig`. `operatorId` matches an operator's OLM subscription; `customResources` lists the operator's owned CR (its objects list, e.g. `dc1`, selects specific instances); `applicationResources` selects extra resources (e.g. Secrets) the operator's CR doesn't own but the application needs, such as `dc-secret`.
+Schedule cadence (e.g. "full backup every 6 hours", "incremental every 3 hours", "snapshot daily at 2 PM") and retention counts (e.g. "retain latest 5 backups") are configured as separate `Policy` CRs — see [Policy CRD](policy-crd.md) — and referenced here by name/namespace under `backupConfig` / `snapshotConfig`. `operatorId` can match an operator's OLM subscription; `customResources` lists the operator's owned CR (its objects list, e.g. `dc1`, selects specific instances); `applicationResources` selects extra resources (e.g. Secrets) the operator's CR doesn't own but the application needs, such as `dc-secret`.
 
 ```yaml
 apiVersion: triliovault.trilio.io/v1
