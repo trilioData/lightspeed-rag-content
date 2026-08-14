@@ -259,6 +259,70 @@ spec:
   backupPlanFlags: {}
 ```
 
+### Operator BackupPlan with backup/incremental/snapshot schedule and retention policies (Cassandra)
+
+Schedule cadence (e.g. "full backup every 6 hours", "incremental every 3 hours", "snapshot daily at 2 PM") and retention counts (e.g. "retain latest 5 backups") are configured as separate `Policy` CRs — see [Policy CRD](policy-crd.md) — and referenced here by name/namespace under `backupConfig` / `snapshotConfig`. `operatorId` matches an operator's OLM subscription; `customResources` lists the operator's owned CR (its objects list, e.g. `dc1`, selects specific instances); `applicationResources` selects extra resources (e.g. Secrets) the operator's CR doesn't own but the application needs, such as `dc-secret`.
+
+```yaml
+apiVersion: triliovault.trilio.io/v1
+kind: BackupPlan
+metadata:
+  name: cassandra-backupplan
+  namespace: cassandra-operator
+spec:
+  encryption:
+    encryptionSecret:
+      name: encryption-secret
+      namespace: trilio-system
+  backupConfig:
+    target:
+      name: minio-target
+      namespace: trilio-system
+    retentionPolicy:
+      name: backup-retain-latest-5
+      namespace: trilio-system
+    schedulePolicy:
+      fullBackupPolicy:
+        name: full-backup-every-6h
+        namespace: trilio-system
+      incrementalBackupPolicy:
+        name: incremental-backup-every-3h
+        namespace: trilio-system
+  snapshotConfig:
+    target:
+      name: minio-target
+      namespace: trilio-system
+    retentionPolicy:
+      name: snapshot-retain-latest-4
+      namespace: trilio-system
+    schedulePolicy:
+      snapshotPolicy:
+        name: snapshot-daily-2pm
+        namespace: trilio-system
+  backupPlanComponents:
+    operators:
+      - operatorId: cassandra-operator
+        subscription:
+          name: cassandra-datacentor
+          namespace: openshift-operators
+        customResources:
+          - groupVersionKind:
+              group: cassandra.datastax.com
+              version: v1beta1
+              kind: CassandraDatacenter
+            objects:
+              - dc1
+        applicationResources:
+          gvkSelector:
+            - groupVersionKind:
+                version: v1
+                kind: Secret
+              objects:
+                - dc-secret
+```
+
+See the [Policy CRD](policy-crd.md) "Combined example" for the matching `full-backup-every-6h`, `incremental-backup-every-3h`, `backup-retain-latest-5`, `snapshot-daily-2pm`, and `snapshot-retain-latest-4` Policy CRs.
+
 ### BackupPlan with security scan and continuous restore config
 
 ```yaml
