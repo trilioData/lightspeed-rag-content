@@ -77,9 +77,14 @@ endif
 
 # Identify the internal release with the alpha/beta/rc tags
 ISRC ?= $(shell git describe --tags --match=$(IMAGE_TAG) --exclude=*-alpha* --exclude=*-beta* --abbrev=0 2> /dev/null)
+EXTERNAL ?= $(shell git describe --tags --match=$(IMAGE_TAG) --exclude=*-alpha* --exclude=*-rc* --exclude=*-beta* --abbrev=0 2> /dev/null)
 
 ifeq ($(ISRC),$(IMAGE_TAG))
  REGISTRY=quay.io/triliovault
+endif
+
+ifeq ($(EXTERNAL),$(IMAGE_TAG))
+ REGISTRY=quay.io/triliodata
 endif
 
 IMAGE := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
