@@ -47,7 +47,7 @@ RUN set -e && python3.12 generate_embeddings.py -f tvk-content -md embeddings_mo
 #             -mn ${EMBEDDING_MODEL} -o vector_db \
 #             -i tvk_rag_index -hb $HERMETIC
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:12db9874bd753eb98b1ab3d840e75de5d6842ac0604fbd68c012adefe97140be
+FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:beeada7dd17903dfb69fd5f6916c054720bf28a52daaa2f7a1910a1394244bd2
 COPY --from=lightspeed-rag-builder /workdir/vector_db /rag/vector_db
 COPY --from=lightspeed-rag-builder /workdir/embeddings_model /rag/embeddings_model
 
@@ -58,8 +58,8 @@ COPY LICENSE /licenses/
 LABEL name="tvk-lightspeed-rag-content"
 LABEL maintainer=Trilio\ Data\ Inc.
 LABEL vendor=Trilio\ Data\ Inc.
-LABEL version=5.4.1-rc.2
-LABEL release=RC
+LABEL version=5.4.1
+LABEL release=GA
 LABEL summary="OpenShift Lightspeed RAG content for TVK"
 LABEL description="TrilioVault RAG content for OpenShift Lightspeed"
 
