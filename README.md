@@ -1,5 +1,6 @@
 # OpenShift Lighspeed RAG content
 
+
 ## `requirements*` files generation
 
 In order to generate all requirements files:
