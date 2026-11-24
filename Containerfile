@@ -47,7 +47,7 @@ RUN set -e && python3.12 generate_embeddings.py -f tvk-content -md embeddings_mo
 #             -mn ${EMBEDDING_MODEL} -o vector_db \
 #             -i tvk_rag_index -hb $HERMETIC
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:12db9874bd753eb98b1ab3d840e75de5d6842ac0604fbd68c012adefe97140be
+FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:08d4c70f1baf6537a0728656cf7942d561e74a35916509d205b6519861266352
 COPY --from=lightspeed-rag-builder /workdir/vector_db /rag/vector_db
 COPY --from=lightspeed-rag-builder /workdir/embeddings_model /rag/embeddings_model
 
